@@ -1,1 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+  <title>Aarvi Admin</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./manifest.json">
+  
+  <style>
+    :root {
+      --bg-color: #f1f3f6; 
+      --surface-color: #ffffff;
+      --text-main: #000000;
+      --text-sub: #666666;
+      --border: #e0e0e0;
+      --primary: #2874f0; 
+      --header-height: 60px;
+      --nav-height: 65px;
+      --sidebar-width: 250px;
+      --danger: #d32f2f;
+    }
 
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #000000; 
+        --surface-color: #121212;
+        --text-main: #ffffff;
+        --text-sub: #a0a0a0;
+        --border: #333333;
+        --danger: #f28b82;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      user-select: none;
+    }
+
+    body, html {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      height: 100vh;
+      height: 100dvh; 
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- Top Header --- */
+    header {
+      height: var(--header-height);
+      background-color: var(--surface-color);
+      display: flex; /* Visible by default for optimistic loading */
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand img { 
+      width: 28px; 
+      height: 28px; 
+      object-fit: contain; 
+      border-radius: 6px; 
+    }
+    
+    .admin-badge {
+      background: var(--danger);
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-left: 4px;
+    }
+
+    .dp-wrapper {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      overflow: hidden;
+      cursor: pointer;
+      display: block; 
+      background-color: var(--border);
+      transition: opacity 0.3s, filter 0.3s;
+    }
+
+    .dp-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    /* --- Main Layout Wrapper --- */
+    .layout-wrapper {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* --- Desktop Sidebar --- */
+    aside {
+      width: var(--sidebar-width);
+      background-color: var(--surface-color);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 40;
+      opacity: 0;
+      transform: translateX(-20px);
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    aside.shell-active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .nav-list { display: flex; flex-direction: column; padding: 16px 12px; gap: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      color: var(--text-sub);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+
+    .nav-item:hover { background-color: var(--bg-color); color: var(--text-main); }
+    .nav-item.active { background-color: rgba(40, 116, 240, 0.1); color: var(--primary); }
+    .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+
+    /* --- Iframe Container --- */
+    main {
+      flex: 1;
+      background-color: var(--bg-color);
+      position: relative;
+    }
+
+    #content-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+      display: block;
+    }
+
+    /* --- Mobile Bottom Nav --- */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: var(--nav-height);
+      min-height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+      background-color: var(--surface-color);
+      z-index: 50;
+      flex-shrink: 0;
+      padding-bottom: env(safe-area-inset-bottom);
+      
+      opacity: 0;
+      transform: translateY(100%);
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .bottom-nav.shell-active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .bottom-nav-inner {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+    }
+
+    .b-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: var(--text-sub);
+      text-decoration: none;
+      flex: 1;
+      height: 100%;
+    }
+
+    .b-item svg { width: 24px; height: 24px; fill: currentColor; transition: transform 0.2s; }
+    .b-item span { font-size: 11px; font-weight: 600; }
+    
+    .b-item.active { color: var(--primary); }
+    .b-item.active svg { transform: scale(1.15); }
+
+    /* --- Navigation Locked State --- */
+    .nav-locked {
+      pointer-events: none !important;
+      opacity: 0.4 !important;
+      cursor: not-allowed !important;
+      filter: grayscale(0.6) !important;
+      user-select: none !important;
+    }
+
+    /* --- PWA Install Pill --- */
+    #install-pill {
+      position: fixed;
+      bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 20px);
+      left: 50%;
+      transform: translateX(-50%) translateY(150px);
+      background-color: var(--text-main);
+      color: var(--surface-color);
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      z-index: 100;
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    #install-pill.show { transform: translateX(-50%) translateY(0); }
+    #install-pill svg { width: 18px; height: 18px; stroke: currentColor; }
+
+    /* --- Responsive Switching --- */
+    @media (max-width: 768px) {
+      aside { display: none !important; }
+      .layout-wrapper.shell-active { padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); }
+    }
+    @media (min-width: 769px) {
+      .bottom-nav { display: none !important; }
+      #install-pill { bottom: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header id="app-header">
+    <div class="brand">
+      <img src="images/icon.png" alt="Aarvi Logo" onerror="this.style.display='none'">
+      Aarvi <span class="admin-badge">ADMIN</span>
+    </div>
+    
+    <a href="pages/account.html" target="content-frame" class="dp-wrapper" id="profile-btn" onclick="handleNavClick(-1)">
+      <img id="user-dp" src="" alt="Profile">
+    </a>
+  </header>
+
+  <div class="layout-wrapper shell-active" id="layout-wrapper">
+    <!-- Desktop Side Navigation -->
+    <aside id="app-sidebar" class="shell-active">
+      <div class="nav-list">
+        <a href="pages/home.html" class="nav-item active" target="content-frame" onclick="handleNavClick(0)">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h2v5zm0 4h-2v-2h2v2z"/></svg>
+          Orders
+        </a>
+        <a href="pages/inventory.html" class="nav-item" target="content-frame" onclick="handleNavClick(1)">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z"/></svg>
+          Inventory
+        </a>
+        <a href="pages/layout.html" class="nav-item" target="content-frame" onclick="handleNavClick(2)">
+          <svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z"/></svg>
+          Layout
+        </a>
+        <a href="pages/agents.html" class="nav-item" target="content-frame" onclick="handleNavClick(3)">
+          <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+          Agents
+        </a>
+        <a href="pages/accounts.html" class="nav-item" target="content-frame" onclick="handleNavClick(4)">
+          <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          Accounts
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Frame -->
+    <main>
+      <iframe src="pages/home.html" id="content-frame" name="content-frame" title="App Content"></iframe>
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav shell-active" id="bottom-nav">
+    <div class="bottom-nav-inner">
+      <a href="pages/home.html" class="b-item active" target="content-frame" onclick="handleNavClick(0)">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h2v5zm0 4h-2v-2h2v2z"/></svg>
+        <span>Orders</span>
+      </a>
+      <a href="pages/inventory.html" class="b-item" target="content-frame" onclick="handleNavClick(1)">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z"/></svg>
+        <span>Inventory</span>
+      </a>
+      <a href="pages/layout.html" class="b-item" target="content-frame" onclick="handleNavClick(2)">
+        <svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z"/></svg>
+        <span>Layout</span>
+      </a>
+      <a href="pages/agents.html" class="b-item" target="content-frame" onclick="handleNavClick(3)">
+        <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+        <span>Agents</span>
+      </a>
+      <a href="pages/accounts.html" class="b-item" target="content-frame" onclick="handleNavClick(4)">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <span>Accounts</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Install App Pill -->
+  <div id="install-pill">
+    <svg fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+    Install App
+  </div>
+
+  <script type="module">
+    import { auth, db } from './config.js';
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // 1. Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .catch(err => console.error('SW Failed', err));
+      });
+    }
+
+    // UI Shell Elements
+    const appHeader = document.getElementById('app-header');
+    const appSidebar = document.getElementById('app-sidebar');
+    const bottomNav = document.getElementById('bottom-nav');
+    const layoutWrapper = document.getElementById('layout-wrapper');
+    const contentFrame = document.getElementById('content-frame');
+    const dpImg = document.getElementById('user-dp');
+    const profileBtn = document.getElementById('profile-btn');
+
+    // Button Lock Controller
+    function setNavigationLock(locked) {
+      if (locked) {
+        appSidebar.classList.add('nav-locked');
+        bottomNav.classList.add('nav-locked');
+        profileBtn.classList.add('nav-locked');
+      } else {
+        appSidebar.classList.remove('nav-locked');
+        bottomNav.classList.remove('nav-locked');
+        profileBtn.classList.remove('nav-locked');
+      }
+    }
+
+    // Expose UI reveal to child frames
+    window.revealAppShell = function() {
+      appHeader.style.display = 'flex';
+      appSidebar.classList.add('shell-active');
+      bottomNav.classList.add('shell-active');
+      layoutWrapper.classList.add('shell-active');
+    };
+
+    // 0ms Profile Picture Load
+    const localDpUrl = localStorage.getItem('aarvi_admin_dp');
+    if (localDpUrl) {
+      dpImg.src = localDpUrl;
+      dpImg.style.opacity = '1';
+    }
+
+    // 2. Auth Protection & Admin Verification
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        // NOT LOGGED IN: Hide shell, go to login
+        appHeader.style.display = 'none';
+        appSidebar.classList.remove('shell-active');
+        bottomNav.classList.remove('shell-active');
+        layoutWrapper.classList.remove('shell-active');
+        
+        localStorage.removeItem('aarvi_admin_login');
+        setNavigationLock(false);
+        
+        contentFrame.src = "pages/login.html";
+      } else {
+        // VERIFY ADMIN PRIVILEGES
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists() && userSnap.data().admin === true) {
+            // ADMIN AUTHORIZED
+            localStorage.setItem('aarvi_admin_login', 'true');
+            window.revealAppShell();
+            setNavigationLock(false);
+
+            const currentSrc = contentFrame.src || "";
+            if (currentSrc.includes('login.html') || currentSrc.includes('index.html') || currentSrc === "about:blank") {
+              contentFrame.src = "pages/home.html";
+            }
+
+            if (user.photoURL && user.photoURL !== localDpUrl) {
+              const tempImg = new Image();
+              tempImg.onload = () => {
+                dpImg.src = tempImg.src;
+                dpImg.style.opacity = '1';
+                localStorage.setItem('aarvi_admin_dp', tempImg.src);
+              };
+              tempImg.src = user.photoURL;
+            }
+          } else {
+            // UNAUTHORIZED: Boot customer out of admin panel
+            auth.signOut();
+            alert("Unauthorized Access. You do not have admin privileges.");
+          }
+        } catch (error) {
+          console.error("Error verifying admin document status:", error);
+          auth.signOut();
+        }
+      }
+    });
+
+    contentFrame.addEventListener('load', () => {
+      try {
+        const frameUrl = contentFrame.contentWindow.location.href;
+        if (auth.currentUser && localStorage.getItem('aarvi_admin_login') && (frameUrl.includes('login.html') || frameUrl.includes('index.html'))) {
+           contentFrame.src = "pages/home.html";
+        }
+      } catch (e) {}
+    });
+
+    window.addEventListener('message', (event) => {
+      if (event.data === 'ADMIN_LOGIN_SUCCESS') {
+        localStorage.setItem('aarvi_admin_login', 'true');
+        setNavigationLock(false);
+        contentFrame.src = "pages/home.html";
+      }
+    });
+
+    // 3. Navigation Sync & Haptics
+    window.handleNavClick = function(index) {
+      if (navigator.vibrate) navigator.vibrate(40);
+      
+      const sidebarItems = document.querySelectorAll('.nav-list .nav-item');
+      const bottomNavItems = document.querySelectorAll('.b-item');
+      
+      sidebarItems.forEach(item => item.classList.remove('active'));
+      bottomNavItems.forEach(item => item.classList.remove('active'));
+      
+      if (index >= 0) {
+        if (sidebarItems[index]) sidebarItems[index].classList.add('active');
+        if (bottomNavItems[index]) bottomNavItems[index].classList.add('active');
+      }
+    };
+
+    // 4. PWA Install Logic
+    let deferredPrompt;
+    const installPill = document.getElementById('install-pill');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault(); 
+      deferredPrompt = e;
+      setTimeout(() => installPill.classList.add('show'), 3000);
+    });
+
+    installPill.addEventListener('click', async () => {
+      if (navigator.vibrate) navigator.vibrate(40);
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') console.log('Admin PWA Installed');
+        deferredPrompt = null;
+        installPill.classList.remove('show');
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installPill.classList.remove('show');
+      deferredPrompt = null;
+    });
+  </script>
+</body>
+</html>
