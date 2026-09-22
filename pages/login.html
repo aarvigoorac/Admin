@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+  <title>Admin Login - Aarvi Stores</title>
+  
+  <style>
+    :root {
+      --bg-color: #f1f3f6;
+      --surface-color: #ffffff;
+      --text-main: #000000;
+      --text-sub: #666666;
+      --border: #e0e0e0;
+      --input-bg: #f1f3f6;
+      --danger: #d32f2f;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #121212;
+        --surface-color: #1e1e1e;
+        --text-main: #ffffff;
+        --text-sub: #a0a0a0;
+        --border: #333333;
+        --input-bg: #2a2a2a;
+        --danger: #f28b82;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      user-select: none;
+    }
+
+    body, html {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* Enhanced Entrance Animation */
+    .view-container {
+      width: 100%;
+      height: 100%;
+      padding: 48px 24px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      max-width: 600px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .branding-section {
+      margin-top: 15vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Logo Scale-in */
+    .app-logo {
+      width: 80px; 
+      height: 80px; 
+      border-radius: 20px; 
+      box-shadow: 0 10px 24px rgba(0,0,0,0.12); 
+      margin-bottom: 24px;
+      animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    h1 { 
+      font-size: 26px; 
+      font-weight: 800; 
+      letter-spacing: -0.5px; 
+      margin-bottom: 8px; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .admin-badge {
+      background: var(--danger);
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transform: translateY(-2px);
+    }
+
+    p.subtitle { 
+      font-size: 15px; 
+      color: var(--text-sub); 
+      line-height: 1.5; 
+      padding: 0 10px; 
+      margin-bottom: 32px; 
+    }
+
+    .action-container {
+      position: absolute; 
+      top: 75vh; 
+      left: 24px; 
+      right: 24px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-google {
+      background-color: var(--surface-color);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    
+    /* Interactive Hover & Tap Physics */
+    .btn-google:hover {
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    
+    .btn-google:active { 
+      background-color: var(--input-bg); 
+      transform: scale(0.96); 
+    }
+
+    .error-text { color: var(--danger); font-size: 14px; margin-top: 16px; display: none; text-align: center; font-weight: 600; }
+    
+    .loader {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2.5px solid transparent;
+      border-radius: 50%;
+      border-top-color: currentColor;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+  </style>
+</head>
+<body>
+
+  <div class="view-container" id="login-container">
+    
+    <!-- Centered Branding Content -->
+    <div class="branding-section">
+      <img src="../images/icon.png" alt="Aarvi Stores Logo" class="app-logo">
+      <h1>Aarvi <span class="admin-badge">ADMIN</span></h1>
+      <p class="subtitle">Secure access to the Aarvi Stores management console.</p>
+    </div>
+
+    <!-- Pinned Button at 75vh Thumb Zone -->
+    <div class="action-container">
+      <button class="btn btn-google" id="google-login-btn">
+        <svg viewBox="0 0 48 48" width="24" height="24" id="google-icon">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        <span id="btn-text">Sign in with Google</span>
+        <div class="loader" id="btn-loader"></div>
+      </button>
+      <p class="error-text" id="error-msg"></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, googleProvider } from '../config.js';
+    import { signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const loginBtn = document.getElementById('google-login-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnLoader = document.getElementById('btn-loader');
+    const googleIcon = document.getElementById('google-icon');
+    const errorMsg = document.getElementById('error-msg');
+
+    // Pure delegation: This script only handles the auth popup.
+    // The master index.html will detect the auth state change, verify admin privileges, and handle routing.
+    loginBtn.addEventListener('click', async () => {
+      if (navigator.vibrate) navigator.vibrate(40);
+      
+      // Lock UI State
+      loginBtn.style.pointerEvents = 'none';
+      btnText.innerText = "Authenticating...";
+      googleIcon.style.display = 'none';
+      btnLoader.style.display = 'block';
+      errorMsg.style.display = 'none';
+
+      try {
+        await signInWithPopup(auth, googleProvider);
+        // Do not redirect here. Let index.html's onAuthStateChanged do the security check.
+      } catch (error) {
+        // Revert UI on popup close or failure
+        loginBtn.style.pointerEvents = 'auto';
+        btnText.innerText = "Sign in with Google";
+        googleIcon.style.display = 'block';
+        btnLoader.style.display = 'none';
+        
+        errorMsg.innerText = error.message.includes('popup-closed') 
+          ? "Login cancelled." 
+          : "Authentication failed. Try again.";
+        errorMsg.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
