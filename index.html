@@ -239,6 +239,44 @@
       user-select: none !important;
     }
 
+    /* --- Permission Denied Overlay --- */
+    #permission-denied-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg-color);
+      z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      backdrop-filter: blur(5px);
+    }
+
+    #permission-denied-overlay svg {
+      width: 72px;
+      height: 72px;
+      fill: var(--danger);
+      margin-bottom: 20px;
+    }
+
+    #permission-denied-overlay h2 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    #permission-denied-overlay p {
+      color: var(--text-sub);
+      font-size: 15px;
+      line-height: 1.5;
+      max-width: 400px;
+    }
+
     /* --- PWA Install Pill --- */
     #install-pill {
       position: fixed;
@@ -276,6 +314,13 @@
 </head>
 <body>
 
+  <!-- Permission Denied Overlay -->
+  <div id="permission-denied-overlay">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+    <h2>Access Denied</h2>
+    <p>Your account does not have administrator privileges. Please request access from the system owner.</p>
+  </div>
+
   <!-- App Header -->
   <header id="app-header">
     <div class="brand">
@@ -308,10 +353,11 @@
           <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
           Agents
         </a>
-        <a href="pages/accounts.html" class="nav-item" target="content-frame" onclick="handleNavClick(4)">
+        <!-- Accounts Navigation removed per instructions (Commented out to prevent line deletion) -->
+        <!-- <a href="pages/accounts.html" class="nav-item" target="content-frame" onclick="handleNavClick(4)">
           <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
           Accounts
-        </a>
+        </a> -->
       </div>
     </aside>
 
@@ -340,10 +386,11 @@
         <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
         <span>Agents</span>
       </a>
-      <a href="pages/accounts.html" class="b-item" target="content-frame" onclick="handleNavClick(4)">
+      <!-- Accounts Navigation removed per instructions (Commented out to prevent line deletion) -->
+      <!-- <a href="pages/accounts.html" class="b-item" target="content-frame" onclick="handleNavClick(4)">
         <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
         <span>Accounts</span>
-      </a>
+      </a> -->
     </div>
   </nav>
 
@@ -355,7 +402,7 @@
 
   <script type="module">
     import { auth, db } from './config.js';
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     // 1. Service Worker Registration
@@ -374,6 +421,7 @@
     const contentFrame = document.getElementById('content-frame');
     const dpImg = document.getElementById('user-dp');
     const profileBtn = document.getElementById('profile-btn');
+    const deniedOverlay = document.getElementById('permission-denied-overlay');
 
     // Button Lock Controller
     function setNavigationLock(locked) {
@@ -411,27 +459,68 @@
         appSidebar.classList.remove('shell-active');
         bottomNav.classList.remove('shell-active');
         layoutWrapper.classList.remove('shell-active');
+        deniedOverlay.style.display = 'none';
         
         localStorage.removeItem('aarvi_admin_login');
         setNavigationLock(false);
         
         contentFrame.src = "pages/login.html";
       } else {
-        // VERIFY ADMIN PRIVILEGES
+        
+        // Optimistic Load: Start fetching home immediately in background
+        window.revealAppShell();
+        const currentSrc = contentFrame.src || "";
+        if (currentSrc.includes('login.html') || currentSrc.includes('index.html') || currentSrc === "about:blank") {
+          contentFrame.src = "pages/home.html";
+        }
+
+        // SESSION LOCK: If cache says true, unlock instantly and save Firebase read quota
+        const isCachedAdmin = localStorage.getItem('aarvi_admin_login');
+        
+        if (isCachedAdmin === 'true') {
+            deniedOverlay.style.display = 'none';
+            setNavigationLock(false);
+            
+            if (user.photoURL && user.photoURL !== localDpUrl) {
+              const tempImg = new Image();
+              tempImg.onload = () => {
+                dpImg.src = tempImg.src;
+                dpImg.style.opacity = '1';
+                localStorage.setItem('aarvi_admin_dp', tempImg.src);
+              };
+              tempImg.src = user.photoURL;
+            }
+            return; // Skip DB read
+        }
+
+        // VERIFY ADMIN PRIVILEGES FROM DB
         try {
           const userRef = doc(db, 'users', user.uid);
           const userSnap = await getDoc(userRef);
+          let isAdmin = false;
 
-          if (userSnap.exists() && userSnap.data().admin === true) {
+          // LAZY LOGIN: Create document if it doesn't exist
+          if (!userSnap.exists()) {
+             try {
+               await setDoc(userRef, {
+                 name: user.displayName || 'Admin',
+                 email: user.email || '',
+                 photoURL: user.photoURL || '',
+                 admin: false, // Default newly created accounts to false
+                 createdAt: new Date().toISOString()
+               }, { merge: true });
+             } catch (error) {
+               console.error("Failed to silently create user document", error);
+             }
+          } else {
+             isAdmin = userSnap.data().admin === true;
+          }
+
+          if (isAdmin) {
             // ADMIN AUTHORIZED
             localStorage.setItem('aarvi_admin_login', 'true');
-            window.revealAppShell();
+            deniedOverlay.style.display = 'none';
             setNavigationLock(false);
-
-            const currentSrc = contentFrame.src || "";
-            if (currentSrc.includes('login.html') || currentSrc.includes('index.html') || currentSrc === "about:blank") {
-              contentFrame.src = "pages/home.html";
-            }
 
             if (user.photoURL && user.photoURL !== localDpUrl) {
               const tempImg = new Image();
@@ -443,13 +532,15 @@
               tempImg.src = user.photoURL;
             }
           } else {
-            // UNAUTHORIZED: Boot customer out of admin panel
-            auth.signOut();
-            alert("Unauthorized Access. You do not have admin privileges.");
+            // UNAUTHORIZED: Show hidden overlay and lock UI, but do not sign out
+            localStorage.removeItem('aarvi_admin_login');
+            deniedOverlay.style.display = 'flex';
+            setNavigationLock(true);
           }
         } catch (error) {
           console.error("Error verifying admin document status:", error);
-          auth.signOut();
+          deniedOverlay.style.display = 'flex';
+          setNavigationLock(true);
         }
       }
     });
@@ -481,8 +572,8 @@
       sidebarItems.forEach(item => item.classList.remove('active'));
       bottomNavItems.forEach(item => item.classList.remove('active'));
       
-      if (index >= 0) {
-        if (sidebarItems[index]) sidebarItems[index].classList.add('active');
+      if (index >= 0 && sidebarItems[index]) {
+        sidebarItems[index].classList.add('active');
         if (bottomNavItems[index]) bottomNavItems[index].classList.add('active');
       }
     };
