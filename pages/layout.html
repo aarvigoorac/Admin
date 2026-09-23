@@ -352,7 +352,6 @@
               <div class="slot-name">${product.name || product.title || 'Unnamed Product'}</div>
               <div class="slot-meta">
                 <span class="slot-price">₹${(product.price || 0).toLocaleString('en-IN')}</span>
-                <span>Stock: ${product.stock !== undefined ? product.stock : 'N/A'}</span>
               </div>
             </div>
             <div class="slot-action-hint">Manage</div>
@@ -478,6 +477,8 @@
       hasMoreInventory = true;
       
       inventoryList.innerHTML = generateInventorySkeletons(6);
+      document.getElementById('inventory-list').scrollTop = 0; // Reset scroll position perfectly
+      
       fetchInventory(true);
 
       overlaySearch.classList.add('active');
@@ -512,7 +513,7 @@
         let q;
         if (keyword.length > 0) {
           // Firebase strictly limits 'array-contains' pagination without complex composite indexes
-          // We will fetch up to 20 for search hits to ensure 1 database read.
+          // We will fetch up to 20 for search hits to ensure minimal database reads.
           q = query(
             collection(db, "products"),
             where("keywords", "array-contains", keyword),
@@ -553,7 +554,6 @@
               <div class="inv-name">${prod.name || prod.title || 'Unnamed Product'}</div>
               <div class="inv-meta">
                 <span style="color:var(--primary); font-weight:800;">₹${(prod.price || 0).toLocaleString('en-IN')}</span>
-                <span>Stock: ${prod.stock !== undefined ? prod.stock : 'N/A'}</span>
               </div>
             </div>
             <div class="btn-select">Assign</div>
