@@ -21,6 +21,8 @@
       --st-out: #854800;        --st-out-bg: #ffe4c4;
       --st-delivered: #137333;  --st-delivered-bg: #e6f4ea;
       --st-rejected: #b3261e;   --st-rejected-bg: #f9dedc;
+      --warning: #b3261e;
+      --warning-bg: #f9dedc;
     }
     
     @media (prefers-color-scheme: dark) {
@@ -39,6 +41,8 @@
         --st-out: #ffb56b;        --st-out-bg: #3d2200;
         --st-delivered: #81c995;  --st-delivered-bg: #1e3a29;
         --st-rejected: #f2b8b5;   --st-rejected-bg: #410e0b;
+        --warning: #f2b8b5;
+        --warning-bg: #410e0b;
       }
     }
 
@@ -125,7 +129,6 @@
     .detail-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
     .detail-row.total { font-weight: 800; font-size: 16px; color: var(--primary); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
 
-    /* Agent Card Refined with Overflow Prevention */
     .agent-card { background: var(--surface-color); border: 1.5px solid var(--border); padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease; user-select: none; overflow: hidden; }
     .agent-card:active { transform: scale(0.96); background: var(--bg-color); }
     .agent-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--bg-color); object-fit: cover; flex-shrink: 0; }
@@ -138,9 +141,30 @@
 
     .sentinel { height: 20px; width: 100%; margin-top: 10px; }
     .loading-agents { display: none; text-align: center; padding: 10px; color: var(--text-sub); font-size: 14px; font-weight: 600; width: 100%; }
-    .loading-agents.active { display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .loading-agents svg { animation: spin 1s linear infinite; width: 20px; height: 20px; stroke: currentColor; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .loading-agents.active { display: block; }
+    .loading-agents svg { animation: spin 1s linear infinite; width: 20px; height: 20px; stroke: currentColor; vertical-align: middle; margin-right: 8px; }
+
+    /* Layer 3 Dynamic Dialog Styles */
+    #overlay-dialog { z-index: 2999; }
+    .dialog-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: var(--surface-color); z-index: 3000; border-radius: 20px; padding: 24px; width: 90%; max-width: 360px; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .dialog-box.active { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
+    
+    .dialog-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .dialog-icon.danger { background: var(--warning-bg); color: var(--warning); }
+    .dialog-icon.primary { background: var(--st-approved-bg); color: var(--st-approved); }
+    .dialog-icon svg { width: 28px; height: 28px; stroke: currentColor; stroke-width: 2.5; }
+    
+    .dialog-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: var(--text-main); }
+    .dialog-desc { font-size: 14px; color: var(--text-sub); margin-bottom: 24px; line-height: 1.5; transition: color 0.3s ease; }
+    
+    .dialog-actions { display: flex; width: 100%; gap: 12px; }
+    .btn-dialog { flex: 1; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; transition: transform 0.15s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .btn-dialog:active { transform: scale(0.95); }
+    .btn-dialog:disabled { opacity: 0.6; pointer-events: none; }
+    .btn-dialog.cancel { background: var(--bg-color); color: var(--text-main); border: 1.5px solid var(--border); }
+    .btn-dialog.confirm { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .btn-dialog.confirm.danger { background: var(--warning); }
+
   </style>
 </head>
 <body>
@@ -201,12 +225,23 @@
     </div>
     <div class="modal-scroll">
       <div id="m2-content"></div>
-      <!-- Paginating Spinner for Modal -->
       <div class="loading-agents" id="loading-agents">
         <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4"/></svg>
-        Loading agents...
+        Loading...
       </div>
       <div class="sentinel" id="agent-sentinel"></div>
+    </div>
+  </div>
+
+  <!-- Layer 3: Dynamic HTML Confirmation Dialog -->
+  <div class="modal-overlay" id="overlay-dialog"></div>
+  <div class="dialog-box" id="modal-dialog">
+    <div class="dialog-icon" id="dialog-icon"></div>
+    <div class="dialog-title" id="dialog-title">Confirm Action</div>
+    <div class="dialog-desc" id="dialog-desc">Are you sure?</div>
+    <div class="dialog-actions">
+      <button class="btn-dialog cancel" id="btn-dialog-cancel">Cancel</button>
+      <button class="btn-dialog confirm" id="btn-dialog-confirm">Confirm</button>
     </div>
   </div>
 
@@ -216,8 +251,6 @@
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const RENDER_API_URL = 'https://backend-ayvz.onrender.com/api/approve-zoho-order';
-    
-    // Default Professional SVG Avatar
     const agentAvatarSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23999999'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
 
     // UI Elements
@@ -239,13 +272,23 @@
     const loadingAgents = document.getElementById('loading-agents');
     const agentSentinel = document.getElementById('agent-sentinel');
 
+    // Layer 3 Confirm Dialog Elements
+    const modalDialog = document.getElementById('modal-dialog');
+    const overlayDialog = document.getElementById('overlay-dialog');
+    const dialogIcon = document.getElementById('dialog-icon');
+    const dialogTitle = document.getElementById('dialog-title');
+    const dialogDesc = document.getElementById('dialog-desc');
+    const btnDialogCancel = document.getElementById('btn-dialog-cancel');
+    const btnDialogConfirm = document.getElementById('btn-dialog-confirm');
+
     // State
-    let currentAuthUser = null;
     let currentAdminToken = null;
     let activeOrderData = null;
     let modalStack = [];
     let debounceTimer;
     
+    let pendingActionType = null; // Stores 'reject', 'delete', or 'approve'
+
     // Real-Time & Optimization State
     let unsubscribeFeed = null;
     let lastAgentDoc = null;
@@ -271,13 +314,11 @@
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        currentAuthUser = user;
         currentAdminToken = await user.getIdToken();
         fetchOrdersByDate(datePicker.value);
       }
     });
 
-    // Helper: Map status to timestamp field
     const getStatusTimeField = (status) => {
       const s = status.toLowerCase();
       if (s === 'approved') return 'approvedAt';
@@ -301,11 +342,10 @@
 
     const formatDate = (isoStr) => new Date(isoStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute:'2-digit' });
 
-    // --- REAL-TIME Order Fetching (Optimized with unsubscription & flicker prevention) ---
+    // --- REAL-TIME Order Fetching ---
     function fetchOrdersByDate(dateString) {
       if (unsubscribeFeed) unsubscribeFeed();
 
-      // Only inject skeletons if they are not already hardcoded/present to completely eliminate flickering
       if (!grid.querySelector('.skeleton')) {
         grid.innerHTML = generateSkeletons(6);
       }
@@ -339,7 +379,7 @@
     }
 
     function renderFeed(snapshot) {
-      grid.innerHTML = ''; // This smoothly replaces the initial skeletons with data
+      grid.innerHTML = ''; 
       if (snapshot.empty) return emptyState.classList.add('active');
       emptyState.classList.remove('active');
 
@@ -409,7 +449,7 @@
       if (navigator.vibrate) navigator.vibrate(15);
       lastAgentDoc = null;
       hasMoreAgents = true;
-      agentSearchInput.value = "@gmail.com"; // Reset search UX
+      agentSearchInput.value = "@gmail.com";
       m2Content.innerHTML = '';
       fetchAgents(true);
       
@@ -420,19 +460,107 @@
     }
     window.openLayer2 = openLayer2;
 
+    function openConfirmModal(action) {
+      pendingActionType = action;
+      dialogDesc.style.color = "var(--text-sub)"; // Reset error color if any
+      btnDialogConfirm.innerHTML = 'Confirm'; // Reset text
+      
+      if (action === 'reject') {
+        dialogIcon.className = "dialog-icon danger";
+        dialogIcon.innerHTML = `<svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`;
+        dialogTitle.innerText = "Reject Order?";
+        dialogDesc.innerText = "This order will be permanently marked as rejected.";
+        btnDialogConfirm.className = "btn-dialog confirm danger";
+        btnDialogConfirm.innerText = "Reject";
+      } else if (action === 'delete') {
+        dialogIcon.className = "dialog-icon danger";
+        dialogIcon.innerHTML = `<svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>`;
+        dialogTitle.innerText = "Delete Document?";
+        dialogDesc.innerText = "DANGER: This will permanently delete the entire order document from the database.";
+        btnDialogConfirm.className = "btn-dialog confirm danger";
+        btnDialogConfirm.innerText = "Delete";
+      } else if (action === 'approve') {
+        dialogIcon.className = "dialog-icon primary";
+        dialogIcon.innerHTML = `<svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>`;
+        dialogTitle.innerText = "Approve & Sync?";
+        dialogDesc.innerText = "This will immediately push the order data to Zoho ERP and generate an invoice.";
+        btnDialogConfirm.className = "btn-dialog confirm";
+        btnDialogConfirm.innerText = "Sync to Zoho";
+      }
+
+      overlayDialog.classList.add('active');
+      modalDialog.classList.add('active');
+      modalStack.push('L3');
+      history.pushState({ modal: 'L3' }, '');
+    }
+
     function closeTopLayer() {
       const top = modalStack.pop();
-      if (top === 'L2') { modalL2.classList.remove('active'); overlayL2.classList.remove('active'); }
+      if (top === 'L3') { modalDialog.classList.remove('active'); overlayDialog.classList.remove('active'); pendingActionType = null; }
+      else if (top === 'L2') { modalL2.classList.remove('active'); overlayL2.classList.remove('active'); }
       else if (top === 'L1') { modalL1.classList.remove('active'); overlayL1.classList.remove('active'); activeOrderData = null; }
     }
 
     window.addEventListener('popstate', () => { if (modalStack.length > 0) closeTopLayer(); });
-    ['close-l1', 'overlay-l1', 'close-l2', 'overlay-l2'].forEach(id => {
+    
+    ['close-l1', 'overlay-l1', 'close-l2', 'overlay-l2', 'btn-dialog-cancel', 'overlay-dialog'].forEach(id => {
       document.getElementById(id).addEventListener('click', () => { 
         if (navigator.vibrate) navigator.vibrate(10);
         if(modalStack.length > 0) history.back(); 
       });
     });
+
+    // --- Dynamic Action Confirm Execution ---
+    btnDialogConfirm.addEventListener('click', async () => {
+      if(!activeOrderData || !pendingActionType) return;
+      if(navigator.vibrate) navigator.vibrate(15);
+      
+      const originalText = btnDialogConfirm.innerHTML;
+      btnDialogConfirm.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle><path d="M12 2v4"></path></svg>`;
+      btnDialogConfirm.disabled = true;
+
+      try {
+        if (pendingActionType === 'reject') {
+          const now = new Date().toISOString();
+          await updateDoc(doc(db, 'orders', activeOrderData.id), { status: 'rejected', rejectedAt: now, updatedAt: now });
+          refreshCurrentOrder();
+          history.back(); // close L3
+        } 
+        else if (pendingActionType === 'delete') {
+          await deleteDoc(doc(db, 'orders', activeOrderData.id));
+          history.back(); // close L3
+          history.back(); // close L1
+        } 
+        else if (pendingActionType === 'approve') {
+          const res = await fetch(RENDER_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentAdminToken}` },
+            body: JSON.stringify({ orderId: activeOrderData.id })
+          });
+          const data = await res.json();
+          if(data.success) {
+            if (navigator.vibrate) navigator.vibrate([20, 30, 20]); 
+            refreshCurrentOrder();
+            history.back(); // Close modal on success
+          } else { 
+            throw new Error(data.error || 'API Rejected Sync');
+          }
+        }
+      } catch (err) { 
+        if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+        // Modern UI Error Handling inside the modal
+        dialogDesc.style.color = "var(--warning)";
+        dialogDesc.innerText = `Error: ${err.message || 'Network failure.'}`;
+        btnDialogConfirm.innerHTML = originalText;
+        btnDialogConfirm.disabled = false;
+      } finally {
+        if(pendingActionType !== 'approve') { // Approve handles reset in catch manually
+           btnDialogConfirm.innerHTML = originalText;
+           btnDialogConfirm.disabled = false;
+        }
+      }
+    });
+
 
     // --- Layer 1 Render ---
     function renderLayer1(order) {
@@ -524,61 +652,24 @@
         refreshCurrentOrder();
       });
 
-      document.getElementById('btn-reject').addEventListener('click', async () => {
+      // Bind dynamic modal open triggers
+      document.getElementById('btn-reject').addEventListener('click', () => {
         if (navigator.vibrate) navigator.vibrate(20);
-        if(confirm('Are you sure you want to reject this order?')) {
-          if (navigator.vibrate) navigator.vibrate([20, 40]);
-          const now = new Date().toISOString();
-          await updateDoc(doc(db, 'orders', order.id), { 
-            status: 'rejected',
-            rejectedAt: now,
-            updatedAt: now
-          });
-          refreshCurrentOrder();
-        }
+        openConfirmModal('reject');
       });
 
-      document.getElementById('btn-delete').addEventListener('click', async () => {
+      document.getElementById('btn-delete').addEventListener('click', () => {
         if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
-        if(confirm('DANGER: Permanently delete this order document?')) {
-          if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
-          await deleteDoc(doc(db, 'orders', order.id));
-          history.back(); 
-        }
+        openConfirmModal('delete');
       });
 
-      document.getElementById('btn-confirm').addEventListener('click', async (e) => {
+      document.getElementById('btn-confirm').addEventListener('click', () => {
         if (navigator.vibrate) navigator.vibrate(15);
-        const btn = e.target;
-        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle><path d="M12 2v4"></path></svg>`;
-        btn.style.pointerEvents = 'none';
-
-        try {
-          const res = await fetch(RENDER_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentAdminToken}` },
-            body: JSON.stringify({ orderId: order.id })
-          });
-          const data = await res.json();
-          if(data.success) {
-            if (navigator.vibrate) navigator.vibrate([20, 30, 20]); 
-            refreshCurrentOrder();
-          } else { 
-            if (navigator.vibrate) navigator.vibrate([50, 100, 50]); 
-            alert(data.error || 'Failed to sync'); 
-            btn.innerHTML = 'Approve & Sync'; 
-            btn.style.pointerEvents = 'auto'; 
-          }
-        } catch (err) { 
-          if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
-          alert("Network error"); 
-          btn.innerHTML = 'Approve & Sync'; 
-          btn.style.pointerEvents = 'auto'; 
-        }
+        openConfirmModal('approve');
       });
     }
 
-    // --- Layer 2 Agent Pagination Engine (With Exact ME Pinning) ---
+    // --- Layer 2 Agent Pagination Engine (PURE SEARCH - NO "ME" PINNING) ---
     agentSearchInput.addEventListener('focus', function() {
       if(this.value === '@gmail.com') setTimeout(() => this.setSelectionRange(0, 0), 10);
     });
@@ -600,14 +691,13 @@
       isFetchingAgents = true;
       
       if (isNew) {
-        // Instantly inject skeletons synchronously to prevent blank spaces
         if (m2Content.children.length === 0 || isSearchingAgents) {
           m2Content.innerHTML = generateAgentSkeletons(4);
         }
         lastAgentDoc = null;
         hasMoreAgents = true;
       } else {
-        loadingAgents.style.display = 'flex'; // Use style to show only during pagination
+        loadingAgents.style.display = 'flex'; 
       }
 
       try {
@@ -618,32 +708,16 @@
           hasMoreAgents = false;
         } else {
           isSearchingAgents = false;
-          if (isNew) {
-            q = query(collection(db, "users"), where("agent", "==", true), limit(10));
-          } else {
-            q = query(collection(db, "users"), where("agent", "==", true), startAfter(lastAgentDoc), limit(10));
-          }
+          q = isNew ? query(collection(db, "users"), where("agent", "==", true), limit(10))
+                    : query(collection(db, "users"), where("agent", "==", true), startAfter(lastAgentDoc), limit(10));
         }
 
         const snap = await getDocs(q);
 
-        // Fetch Logged-In User Data explicitly to guarantee it pins to the top
-        let meData = null;
-        if (isNew && !searchEmail && currentAuthUser) {
-          try {
-            const meDoc = await getDoc(doc(db, "users", currentAuthUser.uid));
-            if (meDoc.exists() && meDoc.data().agent === true) {
-              meData = meDoc.data();
-              meData.id = meDoc.id;
-            }
-          } catch(e) { console.warn("Failed to fetch ME doc", e); }
-        }
-
-        // Clear skeletons now that data is ready
         if (isNew) m2Content.innerHTML = '';
         loadingAgents.style.display = 'none';
 
-        if (snap.empty && isNew && !meData) {
+        if (snap.empty && isNew) {
           m2Content.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-sub); font-weight:600;">No active agents found.</div>`;
           isFetchingAgents = false;
           return;
@@ -652,52 +726,38 @@
         if (!searchEmail && snap.docs.length < 10) hasMoreAgents = false;
         else if (!searchEmail) lastAgentDoc = snap.docs[snap.docs.length - 1];
 
-        // 1. Render ME Card First (Pinned)
-        if (meData) {
-          renderAgentCard(meData, true);
-        }
-
-        // 2. Render the rest of the agents
         snap.docs.forEach(docSnap => {
-          // Skip if already pinned to avoid duplicates
-          if (meData && docSnap.id === meData.id && !searchEmail) return; 
           const agent = docSnap.data();
           agent.id = docSnap.id;
-          renderAgentCard(agent, (currentAuthUser && agent.id === currentAuthUser.uid));
+          
+          const card = document.createElement('div');
+          card.className = 'agent-card';
+          card.innerHTML = `
+            <img src="${agentAvatarSvg}" class="agent-avatar">
+            <div class="agent-info">
+              <div class="agent-name">${agent.name || 'Agent'}</div>
+              <div class="agent-role">${agent.email || 'No email'}</div>
+            </div>
+          `;
+          card.addEventListener('click', async () => {
+            if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
+            const now = new Date().toISOString();
+            
+            await updateDoc(doc(db, 'orders', activeOrderData.id), {
+              agentId: agent.id,
+              agentName: agent.name || 'Agent',
+              status: 'assigned',
+              assignedAt: now,
+              updatedAt: now
+            });
+            history.back(); 
+            refreshCurrentOrder(); 
+          });
+          m2Content.appendChild(card);
         });
 
       } catch(e) { console.error(e); loadingAgents.style.display = 'none'; }
       isFetchingAgents = false;
-    }
-
-    function renderAgentCard(agent, isMe = false) {
-      const card = document.createElement('div');
-      card.className = 'agent-card';
-      
-      const meBadgeHtml = isMe ? `<span style="font-size:10px; background:var(--st-delivered-bg); color:var(--st-delivered); padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:800; border:1px solid var(--st-delivered);">ME</span>` : '';
-
-      card.innerHTML = `
-        <img src="${agentAvatarSvg}" class="agent-avatar">
-        <div class="agent-info">
-          <div class="agent-name">${agent.name || 'Agent'} ${meBadgeHtml}</div>
-          <div class="agent-role">${agent.email || 'No email'}</div>
-        </div>
-      `;
-      card.addEventListener('click', async () => {
-        if (navigator.vibrate) navigator.vibrate([20, 40, 20]); // Happy assign vibe
-        const now = new Date().toISOString();
-        
-        await updateDoc(doc(db, 'orders', activeOrderData.id), {
-          agentId: agent.id,
-          agentName: agent.name || 'Agent',
-          status: 'assigned',
-          assignedAt: now,
-          updatedAt: now
-        });
-        history.back(); 
-        refreshCurrentOrder(); 
-      });
-      m2Content.appendChild(card);
     }
 
     const agentObserver = new IntersectionObserver((entries) => {
