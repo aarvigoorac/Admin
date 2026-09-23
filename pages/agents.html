@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Agent Management - Aarvi Stores</title>
+  <style>
+    :root {
+      --bg-color: #f1f3f6;
+      --surface-color: #ffffff;
+      --text-main: #000000;
+      --text-sub: #666666;
+      --border: #e0e0e0;
+      --primary: #2874f0;
+      --skeleton-base: #e0e0e0;
+      --skeleton-shine: #f5f5f5;
+      --success: #137333;
+      --success-bg: #e6f4ea;
+      --assigned: #5e4db2;
+      --assigned-bg: #f0eaff;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #121212;
+        --surface-color: #1e1e1e;
+        --text-main: #ffffff;
+        --text-sub: #a0a0a0;
+        --border: #333333;
+        --skeleton-base: #333333;
+        --skeleton-shine: #444444;
+        --success: #81c995;
+        --success-bg: #1e3a29;
+        --assigned: #9f8fef;
+        --assigned-bg: #28214a;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { display: none; }
+    html, body { -ms-overflow-style: none; scrollbar-width: none; background-color: var(--bg-color); color: var(--text-main); }
+
+    .page-container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
+
+    /* Search Bar */
+    .controls-header { position: sticky; top: 0; background: var(--bg-color); z-index: 50; padding: 12px 0; display: flex; gap: 12px; }
+    .search-wrap { flex: 1; position: relative; }
+    .search-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; stroke: var(--text-sub); stroke-width: 2.5; transition: stroke 0.3s ease; }
+    .search-input { width: 100%; padding: 14px 16px 14px 44px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface-color); color: var(--text-main); font-size: 15px; outline: none; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(40, 116, 240, 0.1); }
+    .search-input:focus + svg { stroke: var(--primary); }
+
+    /* User Grid */
+    .users-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 768px) { .users-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .user-card { background: var(--surface-color); border-radius: 16px; padding: 16px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; align-items: center; gap: 16px; user-select: none; }
+    .user-card:active { transform: scale(0.97); box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: var(--bg-color); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .u-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--skeleton-base); object-fit: cover; flex-shrink: 0; }
+    .u-info { flex: 1; min-width: 0; }
+    .u-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+    .u-email { font-size: 13px; color: var(--text-sub); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    .badge { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 50px; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-agent { background: var(--assigned-bg); color: var(--assigned); border: 1px solid var(--assigned); }
+    .badge-customer { background: var(--bg-color); color: var(--text-sub); border: 1px solid var(--border); }
+
+    /* States & Sentinels */
+    .empty-state { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; grid-column: 1 / -1; animation: fadeIn 0.4s ease; }
+    .empty-state.active { display: flex; }
+    .empty-state svg { width: 64px; height: 64px; color: var(--border); margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    
+    .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    
+    .sentinel { height: 20px; width: 100%; margin-top: 10px; }
+    .loading-more { display: none; text-align: center; padding: 10px; color: var(--text-sub); font-size: 14px; font-weight: 600; width: 100%; }
+    .loading-more.active { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .loading-more svg { animation: spin 1s linear infinite; width: 20px; height: 20px; stroke: currentColor; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* Modal / Bottom Sheet (75% height) */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; height: 75vh; max-height: 75vh; background: var(--bg-color); z-index: 2000; border-radius: 24px 24px 0 0; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); }
+    .bottom-sheet.active { transform: translateY(0); }
+
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; }
+    .btn-close { background: var(--bg-color); border: none; color: var(--text-main); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: transform 0.1s; }
+    .btn-close:active { transform: scale(0.9); }
+    .modal-title { font-size: 18px; font-weight: 800; }
+    
+    .modal-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 100px; }
+
+    /* Form Elements */
+    .form-group { display: flex; flex-direction: column; gap: 8px; background: var(--surface-color); padding: 16px; border-radius: 16px; border: 1px solid var(--border); }
+    .form-label { font-size: 13px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 16px; font-weight: 600; outline: none; transition: border-color 0.2s; }
+    .form-input:focus { border-color: var(--primary); background: var(--surface-color); }
+    .form-readonly { font-size: 15px; color: var(--text-sub); font-weight: 500; padding: 4px 0; }
+
+    /* iOS Style Toggle Switch */
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; }
+    .toggle-info { display: flex; flex-direction: column; gap: 4px; }
+    .toggle-title { font-size: 16px; font-weight: 800; color: var(--text-main); }
+    .toggle-desc { font-size: 13px; color: var(--text-sub); }
+    
+    .switch { position: relative; display: inline-block; width: 52px; height: 30px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .3s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    input:checked + .slider { background-color: var(--success); }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* Action Bar */
+    .action-bar { position: absolute; bottom: 0; left: 0; width: 100%; padding: 16px; background: var(--surface-color); border-top: 1px solid var(--border); display: flex; gap: 12px; z-index: 10; padding-bottom: calc(16px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 12px rgba(0,0,0,0.03); }
+    .btn-save { flex: 1; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 800; text-align: center; cursor: pointer; border: none; background: var(--primary); color: white; display: flex; justify-content: center; align-items: center; gap: 8px; transition: transform 0.15s, opacity 0.2s, box-shadow 0.2s; box-shadow: 0 4px 12px rgba(40, 116, 240, 0.25); }
+    .btn-save:active { transform: scale(0.97); opacity: 0.9; }
+    .btn-save:disabled { opacity: 0.7; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+  <div class="page-container">
+    <div class="controls-header">
+      <div class="search-wrap">
+        <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+        <input type="email" id="search-input" class="search-input" placeholder="Search exact email address...">
+      </div>
+    </div>
+
+    <!-- Feed -->
+    <div class="users-grid" id="users-grid"></div>
+
+    <div class="empty-state" id="empty-state">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+      <h3 id="empty-title">No Users Found</h3>
+      <p id="empty-desc">Try checking the spelling of the email.</p>
+    </div>
+
+    <div class="loading-more" id="loading-more">
+      <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4"/></svg>
+      Loading more users...
+    </div>
+    <div class="sentinel" id="sentinel"></div>
+  </div>
+
+  <!-- Bottom Sheet Modal (75% height) -->
+  <div class="modal-overlay" id="modal-bg"></div>
+  <div class="bottom-sheet" id="bottom-sheet">
+    <div class="modal-header">
+      <div class="modal-title">Edit User Profile</div>
+      <button class="btn-close" id="btn-close">
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+    
+    <div class="modal-scroll">
+      <div style="display:flex; justify-content:center; margin-bottom:10px;">
+        <img src="" id="sheet-avatar" class="u-avatar" style="width:80px; height:80px; border:3px solid var(--border);">
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Email Address (Read-Only)</div>
+        <div class="form-readonly" id="sheet-email">user@example.com</div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Full Name</div>
+        <input type="text" id="sheet-name" class="form-input" placeholder="Enter user's full name">
+      </div>
+
+      <div class="form-group">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-title">Delivery Agent</div>
+            <div class="toggle-desc">Grant access to the delivery partner app.</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="sheet-agent-toggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="action-bar">
+      <button class="btn-save" id="btn-save">Save Changes</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from '../config.js';
+    import { collection, query, where, orderBy, limit, startAfter, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // UI Elements
+    const searchInput = document.getElementById('search-input');
+    const grid = document.getElementById('users-grid');
+    const emptyState = document.getElementById('empty-state');
+    const loadingMore = document.getElementById('loading-more');
+    const sentinel = document.getElementById('sentinel');
+    
+    // Modal Elements
+    const modalBg = document.getElementById('modal-bg');
+    const bottomSheet = document.getElementById('bottom-sheet');
+    const btnClose = document.getElementById('btn-close');
+    const sheetAvatar = document.getElementById('sheet-avatar');
+    const sheetEmail = document.getElementById('sheet-email');
+    const sheetName = document.getElementById('sheet-name');
+    const sheetAgentToggle = document.getElementById('sheet-agent-toggle');
+    const btnSave = document.getElementById('btn-save');
+
+    // State Variables
+    let lastVisibleDoc = null;
+    let isFetching = false;
+    let hasMoreDocs = true;
+    let debounceTimer;
+    let isSearching = false;
+    let isModalOpen = false;
+    
+    // Cache for currently edited user
+    let activeUser = null;
+
+    const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        fetchUsers(true);
+      }
+    });
+
+    const generateSkeletons = (count = 6) => {
+      return Array(count).fill(`
+        <div class="user-card" style="pointer-events:none;">
+          <div class="skeleton u-avatar"></div>
+          <div class="u-info" style="display:flex; flex-direction:column; gap:8px;">
+            <div class="skeleton" style="height:18px; width:60%; border-radius:4px;"></div>
+            <div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    // --- Core Data Fetching (Optimized Database Reads) ---
+    async function fetchUsers(isNewFetch = false, searchEmail = null) {
+      if (isFetching || (!hasMoreDocs && !isNewFetch && !searchEmail)) return;
+      isFetching = true;
+
+      if (isNewFetch) {
+        grid.innerHTML = generateSkeletons(10);
+        emptyState.classList.remove('active');
+        lastVisibleDoc = null;
+        hasMoreDocs = true;
+      } else {
+        loadingMore.classList.add('active');
+      }
+
+      try {
+        let q;
+        if (searchEmail) {
+          // Exact Match Search (1 Read Max)
+          q = query(collection(db, "users"), where("email", "==", searchEmail.toLowerCase()), limit(1));
+          isSearching = true;
+          hasMoreDocs = false; 
+        } else {
+          // Standard Pagination (10 per scroll)
+          isSearching = false;
+          if (isNewFetch) {
+            q = query(collection(db, "users"), orderBy("email"), limit(10));
+          } else {
+            q = query(collection(db, "users"), orderBy("email"), startAfter(lastVisibleDoc), limit(10));
+          }
+        }
+
+        const snapshot = await getDocs(q);
+        
+        if (isNewFetch) grid.innerHTML = '';
+        loadingMore.classList.remove('active');
+
+        if (snapshot.empty && isNewFetch) {
+          emptyState.classList.add('active');
+          isFetching = false;
+          return;
+        }
+
+        if (!searchEmail && snapshot.docs.length < 10) {
+          hasMoreDocs = false;
+        } else if (!searchEmail) {
+          lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+        }
+
+        snapshot.docs.forEach(docSnap => {
+          const userData = docSnap.data();
+          userData.id = docSnap.id;
+          renderUserCard(userData);
+        });
+
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        if (isNewFetch) {
+          grid.innerHTML = `<p style="color:var(--warning); text-align:center; padding:20px;">Failed to load users. Check database rules or indexes.</p>`;
+        }
+      } finally {
+        isFetching = false;
+        loadingMore.classList.remove('active');
+      }
+    }
+
+    // --- Card Rendering & Optimistic Targeting ---
+    function renderUserCard(user) {
+      const card = document.createElement('div');
+      card.className = 'user-card';
+      // Set an exact ID on the card so we can update it later without reloading the page
+      card.id = `user-card-${user.id}`; 
+      
+      const isAgent = user.agent === true;
+      const badgeHtml = isAgent 
+        ? `<span class="badge badge-agent"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Agent</span>`
+        : `<span class="badge badge-customer">Customer</span>`;
+
+      card.innerHTML = `
+        <img src="${user.profilePic || defaultAvatar}" class="u-avatar" onerror="this.src='${defaultAvatar}'">
+        <div class="u-info">
+          <div class="u-name" id="name-${user.id}">${user.name || 'Unknown User'}</div>
+          <div class="u-email">${user.email || 'No email'}</div>
+          <div id="badge-${user.id}">${badgeHtml}</div>
+        </div>
+      `;
+      
+      card.addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(15);
+        openBottomSheet(user);
+      });
+      
+      grid.appendChild(card);
+    }
+
+    // --- Search Input Listener (Debounced) ---
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      const val = e.target.value.trim();
+      
+      debounceTimer = setTimeout(() => {
+        if (val.length > 0) {
+          fetchUsers(true, val);
+        } else if (isSearching) {
+          // If search is cleared, reload the default feed
+          fetchUsers(true);
+        }
+      }, 500);
+    });
+
+    // --- Infinite Scroll Observer ---
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !isFetching && hasMoreDocs && !isSearching) {
+        fetchUsers(false);
+      }
+    }, { rootMargin: "100px" });
+    observer.observe(sentinel);
+
+    // --- Bottom Sheet Modal Engine ---
+    function openBottomSheet(user) {
+      activeUser = user; // Cache user for saving
+      
+      sheetAvatar.src = user.profilePic || defaultAvatar;
+      sheetEmail.innerText = user.email || 'No email recorded';
+      sheetName.value = user.name || '';
+      sheetAgentToggle.checked = user.agent === true;
+
+      // Haptic toggle feedback
+      sheetAgentToggle.onchange = () => {
+        if (navigator.vibrate) navigator.vibrate(10);
+      };
+
+      modalBg.classList.add('active');
+      bottomSheet.classList.add('active');
+      isModalOpen = true;
+      history.pushState({ modal: 'agent_edit' }, '');
+    }
+
+    function closeSheetLogic() {
+      modalBg.classList.remove('active');
+      bottomSheet.classList.remove('active');
+      isModalOpen = false;
+      activeUser = null;
+    }
+
+    // --- Saving & Optimistic UI Update ---
+    btnSave.addEventListener('click', async () => {
+      if (!activeUser) return;
+      if (navigator.vibrate) navigator.vibrate(20);
+
+      const newName = sheetName.value.trim();
+      const isAgent = sheetAgentToggle.checked;
+
+      // UI Loading State
+      const originalBtnText = btnSave.innerHTML;
+      btnSave.innerHTML = `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke-opacity="0.3"></circle><path d="M12 2v4"></path></svg> Saving...`;
+      btnSave.disabled = true;
+
+      try {
+        // 1. Update Firestore (Only 1 Write operation)
+        await updateDoc(doc(db, 'users', activeUser.id), {
+          name: newName,
+          agent: isAgent,
+          updatedAt: new Date().toISOString()
+        });
+
+        if (navigator.vibrate) navigator.vibrate([20, 30, 20]); // Happy success double tap
+
+        // 2. Optimistic UI Update (Zero reads required!)
+        // Directly target the elements inside the specific card in the grid
+        const nameEl = document.getElementById(`name-${activeUser.id}`);
+        const badgeContainer = document.getElementById(`badge-${activeUser.id}`);
+        
+        if (nameEl) nameEl.innerText = newName || 'Unknown User';
+        if (badgeContainer) {
+          badgeContainer.innerHTML = isAgent 
+            ? `<span class="badge badge-agent"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Agent</span>`
+            : `<span class="badge badge-customer">Customer</span>`;
+        }
+
+        // Close Modal
+        history.back();
+
+      } catch (error) {
+        console.error("Failed to update user:", error);
+        if (navigator.vibrate) navigator.vibrate([50, 100, 50]); // Error vibration
+        alert("Failed to save changes. Please try again.");
+      } finally {
+        btnSave.innerHTML = originalBtnText;
+        btnSave.disabled = false;
+      }
+    });
+
+    // --- Hardware Back Button Support ---
+    window.addEventListener('popstate', (e) => {
+      if (isModalOpen) closeSheetLogic();
+    });
+
+    [btnClose, modalBg].forEach(el => {
+      el.addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(10);
+        if (isModalOpen) history.back();
+      });
+    });
+
+  </script>
+</body>
+</html>
