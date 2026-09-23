@@ -144,10 +144,6 @@
     .btn-remove { background: var(--warning-bg); color: var(--warning); border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; transition: transform 0.15s; display: flex; align-items: center; gap: 6px; flex-shrink: 0;}
     .btn-remove:active { transform: scale(0.92); }
 
-    /* Layer 2 Admin Skeletons */
-    .admin-skeletons { display: none; flex-direction: column; gap: 12px; padding-bottom: 20px; }
-    .admin-skeletons.active { display: flex; }
-
     /* HTML Confirmation Dialog */
     #overlay-dialog { z-index: 2999; }
     .dialog-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: var(--surface-color); z-index: 3000; border-radius: 20px; padding: 24px; width: 90%; max-width: 360px; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -179,8 +175,57 @@
       </button>
     </div>
 
-    <!-- Main Users Feed -->
-    <div class="users-grid" id="users-grid"></div>
+    <!-- Main Users Feed: Skeletons are hardcoded for instant 0ms load -->
+    <div class="users-grid" id="users-grid">
+      <div class="user-card" style="pointer-events:none;">
+        <div class="skeleton u-avatar"></div>
+        <div class="u-info" style="display:flex; flex-direction:column; gap:8px;">
+          <div class="skeleton" style="height:18px; width:70%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:50%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:20px; width:80px; border-radius:50px; margin-top:2px;"></div>
+        </div>
+      </div>
+      <div class="user-card" style="pointer-events:none;">
+        <div class="skeleton u-avatar"></div>
+        <div class="u-info" style="display:flex; flex-direction:column; gap:8px;">
+          <div class="skeleton" style="height:18px; width:70%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:50%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:20px; width:80px; border-radius:50px; margin-top:2px;"></div>
+        </div>
+      </div>
+      <div class="user-card" style="pointer-events:none;">
+        <div class="skeleton u-avatar"></div>
+        <div class="u-info" style="display:flex; flex-direction:column; gap:8px;">
+          <div class="skeleton" style="height:18px; width:70%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:50%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:20px; width:80px; border-radius:50px; margin-top:2px;"></div>
+        </div>
+      </div>
+      <div class="user-card" style="pointer-events:none;">
+        <div class="skeleton u-avatar"></div>
+        <div class="u-info" style="display:flex; flex-direction:column; gap:8px;">
+          <div class="skeleton" style="height:18px; width:70%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:50%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:20px; width:80px; border-radius:50px; margin-top:2px;"></div>
+        </div>
+      </div>
+      <div class="user-card" style="pointer-events:none;">
+        <div class="skeleton u-avatar"></div>
+        <div class="u-info" style="display:flex; flex-direction:column; gap:8px;">
+          <div class="skeleton" style="height:18px; width:70%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:50%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:20px; width:80px; border-radius:50px; margin-top:2px;"></div>
+        </div>
+      </div>
+      <div class="user-card" style="pointer-events:none;">
+        <div class="skeleton u-avatar"></div>
+        <div class="u-info" style="display:flex; flex-direction:column; gap:8px;">
+          <div class="skeleton" style="height:18px; width:70%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:50%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:20px; width:80px; border-radius:50px; margin-top:2px;"></div>
+        </div>
+      </div>
+    </div>
 
     <div class="empty-state" id="empty-state">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
@@ -188,7 +233,7 @@
       <p id="empty-desc">Try checking the spelling of the email.</p>
     </div>
 
-    <!-- Paginating Small Loader -->
+    <!-- Paginating Small Loader (Hidden on initial load) -->
     <div class="loading-more" id="loading-more">
       <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4"/></svg>
       Loading...
@@ -246,9 +291,10 @@
       <!-- Admin rows injected here -->
     </div>
     
-    <!-- Detailed Admin Skeletons for Full Screen Modal -->
-    <div class="admin-skeletons" id="loading-admins">
-      <!-- Generated via JS -->
+    <!-- Paginating Spinner for Modal -->
+    <div class="loading-more" id="loading-admins" style="display: none;">
+      <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4"/></svg>
+      Loading admins...
     </div>
 
     <div class="sentinel" id="sentinel-admins"></div>
@@ -323,14 +369,14 @@
     let userToRemove = null;
     let rowToRemove = null;
 
-    // --- Highly Detailed Skeleton Generators ---
+    // --- Highly Detailed Skeleton Generators for JS Injections ---
     const generateGridSkeletons = (count = 6) => Array(count).fill(`
       <div class="user-card" style="pointer-events:none;">
         <div class="skeleton u-avatar"></div>
         <div class="u-info" style="display:flex; flex-direction:column; gap:8px;">
           <div class="skeleton" style="height:18px; width:70%; border-radius:4px;"></div>
           <div class="skeleton" style="height:14px; width:50%; border-radius:4px;"></div>
-          <div class="skeleton" style="height:20px; width:60px; border-radius:50px; margin-top:2px;"></div>
+          <div class="skeleton" style="height:20px; width:80px; border-radius:50px; margin-top:2px;"></div>
         </div>
       </div>
     `).join('');
@@ -348,9 +394,6 @@
       </div>
     `).join('');
 
-    // Inject Admin List Skeletons
-    loadingAdmins.innerHTML = generateListSkeletons(4);
-
     onAuthStateChanged(auth, (user) => { 
       if (user) {
         currentAuthUser = user;
@@ -358,17 +401,20 @@
       }
     });
 
-    // --- 1. Background Feed Fetching (With ME Pinning) ---
+    // --- 1. Background Feed Fetching (With Absolute ME Pinning) ---
     async function fetchUsers(isNewFetch = false, searchEmail = null) {
       if (isFetching || (!hasMoreDocs && !isNewFetch && !searchEmail)) return;
       isFetching = true;
 
       if (isNewFetch) {
-        grid.innerHTML = generateGridSkeletons(10);
+        // If it's a re-fetch or search, inject skeletons. (On initial page load, HTML skeletons are already there)
+        if(grid.children.length === 0 || isSearching) grid.innerHTML = generateGridSkeletons(6);
         emptyState.classList.remove('active');
         lastVisibleDoc = null;
         hasMoreDocs = true;
-      } else { loadingMore.classList.add('active'); }
+      } else { 
+        loadingMore.classList.add('active'); 
+      }
 
       try {
         let q;
@@ -384,7 +430,7 @@
 
         const snapshot = await getDocs(q);
 
-        // Fetch Logged-In User Data explicitly to pin to the top
+        // Explicitly fetch Logged-In User Data to guarantee it pins to the top
         let meData = null;
         if (isNewFetch && !searchEmail && currentAuthUser) {
           try {
@@ -396,6 +442,7 @@
           } catch(e) { console.warn("Failed to fetch ME document", e); }
         }
 
+        // Clear skeletons now that data is ready
         if (isNewFetch) grid.innerHTML = '';
         loadingMore.classList.remove('active');
 
@@ -415,7 +462,8 @@
 
         // 2. Render rest of the users
         snapshot.docs.forEach(docSnap => {
-          if (currentAuthUser && docSnap.id === currentAuthUser.uid && !searchEmail) return; // Skip if already pinned
+          // Skip if already pinned to avoid duplicates
+          if (meData && docSnap.id === meData.id && !searchEmail) return; 
           const userData = docSnap.data();
           userData.id = docSnap.id;
           renderUserCard(userData, (currentAuthUser && userData.id === currentAuthUser.uid));
@@ -530,7 +578,8 @@
       if(navigator.vibrate) navigator.vibrate(15);
       lastAdminDoc = null;
       hasMoreAdminsList = true;
-      adminListContainer.innerHTML = '';
+      // Pre-inject Skeletons directly into container for instant load
+      adminListContainer.innerHTML = generateListSkeletons(6);
       fetchAdminsList(true);
       overlayFull.classList.add('active');
       modalFull.classList.add('active');
@@ -540,14 +589,19 @@
     async function fetchAdminsList(isNew = false) {
       if (isFetchingAdminsList || (!hasMoreAdminsList && !isNew)) return;
       isFetchingAdminsList = true;
-      loadingAdmins.classList.add('active');
+      
+      if (!isNew) {
+        loadingAdmins.style.display = 'flex'; // Show bottom spinner for pagination
+      }
 
       try {
         const q = isNew ? query(collection(db, "users"), where("admin", "==", true), limit(15))
                         : query(collection(db, "users"), where("admin", "==", true), startAfter(lastAdminDoc), limit(15));
         
         const snap = await getDocs(q);
-        loadingAdmins.classList.remove('active');
+        
+        if (isNew) adminListContainer.innerHTML = ''; // Clear skeletons
+        loadingAdmins.style.display = 'none';
 
         if(snap.empty && isNew) { adminListContainer.innerHTML = `<p style="text-align:center; color:var(--text-sub); margin-top:40px;">No active administrators found.</p>`; isFetchingAdminsList = false; return; }
         if(snap.docs.length < 15) hasMoreAdminsList = false;
@@ -578,7 +632,7 @@
           });
           adminListContainer.appendChild(row);
         });
-      } catch(e) { console.error(e); loadingAdmins.classList.remove('active'); }
+      } catch(e) { console.error(e); loadingAdmins.style.display = 'none'; }
       isFetchingAdminsList = false;
     }
 
