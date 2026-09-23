@@ -477,8 +477,6 @@
       hasMoreInventory = true;
       
       inventoryList.innerHTML = generateInventorySkeletons(6);
-      document.getElementById('inventory-list').scrollTop = 0; // Reset scroll position perfectly
-      
       fetchInventory(true);
 
       overlaySearch.classList.add('active');
@@ -488,7 +486,7 @@
 
     inventorySearchInput.addEventListener('input', (e) => {
       clearTimeout(inventorySearchDebounce);
-      const val = e.target.value.trim().toLowerCase();
+      const val = e.target.value.trim().toLowerCase().replace(/[\.\#\$\[\]]/g, '');
       inventorySearchDebounce = setTimeout(() => {
         currentSearchKeyword = val;
         fetchInventory(true, val);
@@ -512,18 +510,20 @@
       try {
         let q;
         if (keyword.length > 0) {
-          // Firebase strictly limits 'array-contains' pagination without complex composite indexes
-          // We will fetch up to 20 for search hits to ensure minimal database reads.
-          q = query(
-            collection(db, "products"),
-            where("keywords", "array-contains", keyword),
-            limit(20)
-          );
-          hasMoreInventory = false; 
+          const searchWords = keyword.split(' ').filter(word => word.trim().length > 0);
+          const queryConstraints = searchWords.map(word => where(`searchKeywords.${word}`, "==", true));
+          
+          if (isNew) {
+            q = query(collection(db, "products"), ...queryConstraints, limit(12));
+          } else {
+            q = query(collection(db, "products"), ...queryConstraints, startAfter(lastInventoryDoc), limit(12));
+          }
         } else {
-          q = isNew 
-            ? query(collection(db, "products"), orderBy("name"), limit(12))
-            : query(collection(db, "products"), orderBy("name"), startAfter(lastInventoryDoc), limit(12));
+          if (isNew) {
+            q = query(collection(db, "products"), orderBy("name"), limit(12));
+          } else {
+            q = query(collection(db, "products"), orderBy("name"), startAfter(lastInventoryDoc), limit(12));
+          }
         }
 
         const snap = await getDocs(q);
@@ -537,8 +537,8 @@
           return;
         }
 
-        if (!keyword && snap.docs.length < 12) hasMoreInventory = false;
-        else if (!keyword) lastInventoryDoc = snap.docs[snap.docs.length - 1];
+        if (snap.docs.length < 12) hasMoreInventory = false;
+        else lastInventoryDoc = snap.docs[snap.docs.length - 1];
 
         snap.docs.forEach(docSnap => {
           const prod = docSnap.data();
@@ -562,7 +562,6 @@
           row.addEventListener('click', async () => {
             if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
             
-            // Show loading state directly on the clicked row before dismissing
             const btn = row.querySelector('.btn-select');
             btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="animation: spin 1s linear infinite; vertical-align:middle;"><circle cx="12" cy="12" r="10" stroke-opacity="0.3"></circle><path d="M12 2v4"></path></svg>`;
             
@@ -581,8 +580,8 @@
     }
 
     const inventoryObserver = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !isFetchingInventory && hasMoreInventory && !currentSearchKeyword) {
-        fetchInventory(false);
+      if (entries[0].isIntersecting && !isFetchingInventory && hasMoreInventory) {
+        fetchInventory(false, currentSearchKeyword);
       }
     }, { rootMargin: "100px" });
     inventoryObserver.observe(sentinelInventory);
@@ -590,7 +589,7 @@
     // --- 6. Save Assignment to Single Homepage Document ---
     async function updateSlotAssignment(slotIndex, productId) {
       try {
-        currentLayoutData[slotIndex] = productId; // Can be a valid product ID or null
+        currentLayoutData[slotIndex] = productId; 
 
         const layoutDocRef = doc(db, "layout", "homepage");
         await setDoc(layoutDocRef, {
@@ -599,7 +598,7 @@
         }, { merge: true });
 
         if (navigator.vibrate) navigator.vibrate(20);
-        await renderSlotsFeed(); // Refresh main UI instantly
+        await renderSlotsFeed(); 
       } catch (err) {
         console.error("Failed to update layout slot:", err);
         alert("Failed to save slot assignment.");
