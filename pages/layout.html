@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Homepage Layout - Aarvi Stores</title>
+  <style>
+    :root {
+      --bg-color: #f1f3f6;
+      --surface-color: #ffffff;
+      --text-main: #000000;
+      --text-sub: #666666;
+      --border: #e0e0e0;
+      --primary: #2874f0;
+      --skeleton-base: #e0e0e0;
+      --skeleton-shine: #f5f5f5;
+      --success: #137333;
+      --success-bg: #e6f4ea;
+      --warning: #b3261e;
+      --warning-bg: #f9dedc;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #121212;
+        --surface-color: #1e1e1e;
+        --text-main: #ffffff;
+        --text-sub: #a0a0a0;
+        --border: #333333;
+        --skeleton-base: #333333;
+        --skeleton-shine: #444444;
+        --success: #81c995;
+        --success-bg: #1e3a29;
+        --warning: #f2b8b5;
+        --warning-bg: #410e0b;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { display: none; }
+    html, body { -ms-overflow-style: none; scrollbar-width: none; background-color: var(--bg-color); color: var(--text-main); }
+
+    .page-container { width: 100%; max-width: 900px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
+
+    .page-header { font-size: 22px; font-weight: 800; padding: 12px 0; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+    .slot-count-badge { font-size: 13px; background: var(--surface-color); border: 1.5px solid var(--border); padding: 4px 12px; border-radius: 50px; color: var(--text-sub); }
+
+    /* 16 Slots Line-by-Line List Container */
+    .slots-list { display: flex; flex-direction: column; gap: 12px; }
+
+    /* Slot Row Card */
+    .slot-card { background: var(--surface-color); border-radius: 16px; padding: 12px 16px; border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease; user-select: none; }
+    .slot-card:active { transform: scale(0.98); background: var(--bg-color); }
+
+    .slot-number { font-size: 14px; font-weight: 800; color: var(--text-sub); width: 24px; text-align: center; flex-shrink: 0; }
+
+    /* Empty Slot State */
+    .slot-card.empty { border: 2px dashed var(--border); background: transparent; }
+    .slot-card.empty:hover { border-color: var(--primary); }
+    .empty-content { display: flex; align-items: center; gap: 12px; width: 100%; color: var(--text-sub); }
+    .empty-icon-box { width: 48px; height: 48px; border-radius: 12px; background: var(--surface-color); border: 1.5px dashed var(--border); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 24px; font-weight: 700; flex-shrink: 0; }
+    .empty-text { font-size: 15px; font-weight: 700; color: var(--text-sub); }
+
+    /* Filled Slot Content */
+    .slot-img { width: 52px; height: 52px; border-radius: 10px; background: var(--bg-color); object-fit: contain; flex-shrink: 0; border: 1px solid var(--border); padding: 2px; }
+    .slot-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .slot-name { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+    .slot-meta { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-sub); font-weight: 600; }
+    .slot-price { color: var(--primary); font-weight: 800; }
+    .slot-action-hint { font-size: 12px; font-weight: 700; color: var(--primary); background: var(--bg-color); padding: 6px 12px; border-radius: 8px; flex-shrink: 0; }
+
+    /* Skeletons */
+    .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important; background-size: 200% 100% !important; animation: shimmer 1.5s infinite !important; border-radius: 6px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Layer 1: Slot Options Bottom Sheet */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); z-index: 1999; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-color); z-index: 2000; border-radius: 24px 24px 0 0; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); max-height: 80vh; }
+    .bottom-sheet.active { transform: translateY(0); }
+    
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; position: sticky; top: 0; z-index: 10; }
+    .btn-close { background: var(--bg-color); border: none; color: var(--text-main); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: transform 0.1s; }
+    .btn-close:active { transform: scale(0.9); }
+    .modal-title { font-size: 18px; font-weight: 800; }
+    .sheet-scroll { padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+
+    .sheet-product-preview { background: var(--surface-color); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; }
+    .sheet-product-img { width: 64px; height: 64px; border-radius: 12px; background: var(--bg-color); object-fit: contain; border: 1px solid var(--border); padding: 4px; flex-shrink: 0; }
+    
+    .sheet-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .btn-sheet { width: 100%; padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.15s; }
+    .btn-sheet:active { transform: scale(0.97); }
+    .btn-change { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(40, 116, 240, 0.25); }
+    .btn-remove { background: var(--warning-bg); color: var(--warning); }
+
+    /* Layer 2: Inventory Search Modal (Full Screen) */
+    #overlay-search { z-index: 2499; }
+    .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2500; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; }
+    .full-modal.active { transform: translateY(0); }
+    
+    .full-header { display: flex; flex-direction: column; background: var(--surface-color); border-bottom: 1px solid var(--border); padding: 16px; gap: 12px; }
+    .full-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .inventory-item { background: var(--surface-color); border: 1px solid var(--border); border-radius: 16px; padding: 12px 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform 0.15s; user-select: none; }
+    .inventory-item:active { transform: scale(0.98); background: var(--bg-color); }
+    .inv-img { width: 52px; height: 52px; border-radius: 10px; background: var(--bg-color); object-fit: contain; border: 1px solid var(--border); padding: 2px; flex-shrink: 0; }
+    .inv-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .inv-name { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .inv-meta { font-size: 13px; color: var(--text-sub); font-weight: 600; display: flex; gap: 12px; }
+
+    .loading-more { display: none; text-align: center; padding: 10px; color: var(--text-sub); font-size: 14px; font-weight: 600; width: 100%; align-items: center; justify-content: center; gap: 8px; }
+    .loading-more.active { display: flex; }
+    .loading-more svg { animation: spin 1s linear infinite; width: 20px; height: 20px; stroke: currentColor; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .sentinel { height: 20px; width: 100%; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <div class="page-container">
+    <div class="page-header">
+      Homepage Layout (16 Slots)
+      <span class="slot-count-badge" id="slot-counter">Loading slots...</span>
+    </div>
+
+    <!-- 16 Line-by-Line Slots Feed -->
+    <div class="slots-list" id="slots-list">
+      <!-- Hardcoded Skeletons for 0ms Instant Load -->
+      <script>
+        document.write(Array(16).fill(`
+          <div class="slot-card empty" style="pointer-events:none;">
+            <div class="slot-number">#</div>
+            <div class="empty-content">
+              <div class="skeleton" style="width:48px; height:48px; border-radius:12px;"></div>
+              <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
+                <div class="skeleton" style="height:16px; width:40%; border-radius:4px;"></div>
+                <div class="skeleton" style="height:12px; width:25%; border-radius:4px;"></div>
+              </div>
+            </div>
+          </div>
+        `).join(''));
+      </script>
+    </div>
+  </div>
+
+  <!-- Layer 1: Slot Options Bottom Sheet -->
+  <div class="modal-overlay" id="overlay-sheet"></div>
+  <div class="bottom-sheet" id="modal-sheet">
+    <div class="modal-header">
+      <div class="modal-title" id="sheet-title">Slot Options</div>
+      <button class="btn-close" id="btn-close-sheet">
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+    <div class="sheet-scroll">
+      <div class="sheet-product-preview" id="sheet-preview">
+        <!-- Filled dynamically -->
+      </div>
+      <div class="sheet-actions">
+        <button class="btn-sheet btn-change" id="btn-sheet-change">Change Product</button>
+        <button class="btn-sheet btn-remove" id="btn-sheet-remove">Remove from Slot</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 2: Inventory Search Modal (Full Screen) -->
+  <div class="modal-overlay" id="overlay-search"></div>
+  <div class="full-modal" id="modal-search">
+    <div class="full-header">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="modal-title" id="search-modal-title">Select Product for Slot</div>
+        <button class="btn-close" id="btn-close-search">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+        </button>
+      </div>
+      <div class="search-wrap" style="width:100%;">
+        <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+        <input type="text" id="inventory-search-input" class="search-input" placeholder="Search inventory keywords...">
+      </div>
+    </div>
+    <div class="full-scroll" id="inventory-list">
+      <!-- Inventory rows injected here -->
+    </div>
+    <div class="loading-more" id="loading-inventory">
+      <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4"/></svg>
+      Loading inventory...
+    </div>
+    <div class="sentinel" id="inventory-sentinel"></div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from '../config.js';
+    import { collection, query, orderBy, limit, startAfter, where, getDocs, getDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const defaultPlaceholderImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'/></svg>";
+
+    // UI Elements
+    const slotsList = document.getElementById('slots-list');
+    const slotCounter = document.getElementById('slot-counter');
+    
+    // Layer 1 Sheet Elements
+    const modalSheet = document.getElementById('modal-sheet');
+    const overlaySheet = document.getElementById('overlay-sheet');
+    const sheetPreview = document.getElementById('sheet-preview');
+    const btnSheetChange = document.getElementById('btn-sheet-change');
+    const btnSheetRemove = document.getElementById('btn-sheet-remove');
+
+    // Layer 2 Search Modal Elements
+    const modalSearch = document.getElementById('modal-search');
+    const overlaySearch = document.getElementById('overlay-search');
+    const inventoryList = document.getElementById('inventory-list');
+    const inventorySearchInput = document.getElementById('inventory-search-input');
+    const loadingInventory = document.getElementById('loading-inventory');
+    const sentinelInventory = document.getElementById('inventory-sentinel');
+    const searchModalTitle = document.getElementById('search-modal-title');
+
+    // Global State
+    let modalStack = [];
+    let currentLayoutData = {}; 
+    let activeSlotIndex = null;
+    let inventorySearchDebounce;
+
+    // Inventory Pagination State
+    let lastInventoryDoc = null;
+    let isFetchingInventory = false;
+    let hasMoreInventory = true;
+    let currentSearchKeyword = '';
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        fetchHomepageLayout();
+      }
+    });
+
+    // --- 1. Fetch Layout Document ---
+    async function fetchHomepageLayout() {
+      try {
+        const layoutDocRef = doc(db, "layout", "homepage");
+        const layoutSnap = await getDoc(layoutDocRef);
+        
+        if (layoutSnap.exists()) {
+          currentLayoutData = layoutSnap.data().slots || {};
+        } else {
+          currentLayoutData = {};
+        }
+
+        await renderSlotsFeed();
+      } catch (err) {
+        console.error("Failed to load layout:", err);
+        slotsList.innerHTML = `<p style="color:var(--warning); text-align:center;">Failed to load homepage layout.</p>`;
+      }
+    }
+
+    // --- 2. Render 16 Slots Line-by-Line Feed ---
+    async function renderSlotsFeed() {
+      // Clear skeletons gently
+      slotsList.innerHTML = '';
+      let filledCount = 0;
+
+      const productIdsToFetch = [];
+      for (let i = 1; i <= 16; i++) {
+        const pId = currentLayoutData[i];
+        if (pId) {
+          filledCount++;
+          if (!productIdsToFetch.includes(pId)) productIdsToFetch.push(pId);
+        }
+      }
+
+      slotCounter.innerText = `${filledCount} of 16 Slots Assigned`;
+
+      // Batch fetch product details from inventory
+      const productMap = {};
+      if (productIdsToFetch.length > 0) {
+        try {
+          // Process in batches of 10 for Firestore 'in' limits
+          for (let i = 0; i < productIdsToFetch.length; i += 10) {
+            const chunk = productIdsToFetch.slice(i, i + 10);
+            
+            // Loop through chunk directly utilizing doc references to avoid complex indexing
+            for (const id of chunk) {
+              const pDoc = await getDoc(doc(db, "products", id));
+              if (pDoc.exists()) {
+                productMap[id] = { id: pDoc.id, ...pDoc.data() };
+              }
+            }
+          }
+        } catch (e) { console.error("Error fetching product data for slots:", e); }
+      }
+
+      // Build the 16 rows
+      for (let i = 1; i <= 16; i++) {
+        const pId = currentLayoutData[i];
+        const product = pId ? productMap[pId] : null;
+
+        const row = document.createElement('div');
+
+        if (product) {
+          // Filled Slot
+          row.className = 'slot-card';
+          const imgSrc = product.image || product.imageUrl || defaultPlaceholderImg;
+          row.innerHTML = `
+            <div class="slot-number">#${i}</div>
+            <img src="${imgSrc}" class="slot-img" onerror="this.src='${defaultPlaceholderImg}'">
+            <div class="slot-info">
+              <div class="slot-name">${product.name || product.title || 'Unnamed Product'}</div>
+              <div class="slot-meta">
+                <span class="slot-price">₹${(product.price || 0).toLocaleString('en-IN')}</span>
+                <span>Stock: ${product.stock !== undefined ? product.stock : 'N/A'}</span>
+              </div>
+            </div>
+            <div class="slot-action-hint">Manage</div>
+          `;
+          row.addEventListener('click', () => {
+            if (navigator.vibrate) navigator.vibrate(15);
+            openSlotOptionsSheet(i, product);
+          });
+        } else {
+          // Empty Slot
+          row.className = 'slot-card empty';
+          row.innerHTML = `
+            <div class="slot-number">#${i}</div>
+            <div class="empty-content">
+              <div class="empty-icon-box">+</div>
+              <div class="empty-text">Assign Product to Slot ${i}</div>
+            </div>
+          `;
+          row.addEventListener('click', () => {
+            if (navigator.vibrate) navigator.vibrate(15);
+            openInventorySearchModal(i);
+          });
+        }
+
+        slotsList.appendChild(row);
+      }
+    }
+
+    // --- 3. Hardware Back Button & Modal Management ---
+    function pushModal(modalId) {
+      modalStack.push(modalId);
+      history.pushState({ modal: modalId }, '');
+    }
+
+    function closeTopModal() {
+      const top = modalStack.pop();
+      if (top === 'search') {
+        modalSearch.classList.remove('active');
+        overlaySearch.classList.remove('active');
+      } else if (top === 'sheet') {
+        modalSheet.classList.remove('active');
+        overlaySheet.classList.remove('active');
+        activeSlotIndex = null;
+      }
+    }
+
+    window.addEventListener('popstate', () => {
+      if (modalStack.length > 0) closeTopModal();
+    });
+
+    ['btn-close-sheet', 'overlay-sheet', 'btn-close-search', 'overlay-search'].forEach(id => {
+      document.getElementById(id).addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(10);
+        if (modalStack.length > 0) history.back();
+      });
+    });
+
+    // --- 4. Layer 1: Slot Options Sheet ---
+    function openSlotOptionsSheet(slotIndex, product) {
+      activeSlotIndex = slotIndex;
+      document.getElementById('sheet-title').innerText = `Manage Slot #${slotIndex}`;
+      
+      const imgSrc = product.image || product.imageUrl || defaultPlaceholderImg;
+      sheetPreview.innerHTML = `
+        <img src="${imgSrc}" class="sheet-product-img" onerror="this.src='${defaultPlaceholderImg}'">
+        <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:4px;">
+          <div style="font-size:16px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${product.name || product.title}</div>
+          <div style="font-size:14px; font-weight:700; color:var(--primary);">₹${(product.price || 0).toLocaleString('en-IN')}</div>
+        </div>
+      `;
+
+      btnSheetChange.onclick = () => {
+        if (navigator.vibrate) navigator.vibrate(15);
+        history.back(); // close sheet
+        openInventorySearchModal(slotIndex);
+      };
+
+      btnSheetRemove.onclick = async () => {
+        if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+        await updateSlotAssignment(slotIndex, null);
+        history.back(); // close sheet
+      };
+
+      overlaySheet.classList.add('active');
+      modalSheet.classList.add('active');
+      pushModal('sheet');
+    }
+
+    // --- 5. Layer 2: Inventory Search Modal & 500ms Debounce ---
+    function openInventorySearchModal(slotIndex) {
+      activeSlotIndex = slotIndex;
+      searchModalTitle.innerText = `Select Product for Slot #${slotIndex}`;
+      inventorySearchInput.value = '';
+      currentSearchKeyword = '';
+      lastInventoryDoc = null;
+      hasMoreInventory = true;
+      inventoryList.innerHTML = '';
+      
+      fetchInventory(true);
+
+      overlaySearch.classList.add('active');
+      modalSearch.classList.add('active');
+      pushModal('search');
+    }
+
+    inventorySearchInput.addEventListener('input', (e) => {
+      clearTimeout(inventorySearchDebounce);
+      const val = e.target.value.trim().toLowerCase();
+      inventorySearchDebounce = setTimeout(() => {
+        currentSearchKeyword = val;
+        fetchInventory(true, val);
+      }, 500);
+    });
+
+    async function fetchInventory(isNew = false, keyword = '') {
+      if (isFetchingInventory || (!hasMoreInventory && !isNew)) return;
+      isFetchingInventory = true;
+      loadingInventory.classList.add('active');
+
+      try {
+        let q;
+        if (keyword.length > 0) {
+          // strict text search via keywords array
+          q = query(
+            collection(db, "products"),
+            where("keywords", "array-contains", keyword),
+            limit(12)
+          );
+          hasMoreInventory = false; 
+        } else {
+          q = isNew 
+            ? query(collection(db, "products"), orderBy("name"), limit(12))
+            : query(collection(db, "products"), orderBy("name"), startAfter(lastInventoryDoc), limit(12));
+        }
+
+        const snap = await getDocs(q);
+        loadingInventory.classList.remove('active');
+
+        if (isNew) inventoryList.innerHTML = '';
+
+        if (snap.empty && isNew) {
+          inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub); font-weight:600;">No products found in inventory.</div>`;
+          isFetchingInventory = false;
+          return;
+        }
+
+        if (!keyword && snap.docs.length < 12) hasMoreInventory = false;
+        else if (!keyword) lastInventoryDoc = snap.docs[snap.docs.length - 1];
+
+        snap.docs.forEach(docSnap => {
+          const prod = docSnap.data();
+          prod.id = docSnap.id;
+
+          const row = document.createElement('div');
+          row.className = 'inventory-item';
+          const imgSrc = prod.image || prod.imageUrl || defaultPlaceholderImg;
+          
+          row.innerHTML = `
+            <img src="${imgSrc}" class="inv-img" onerror="this.src='${defaultPlaceholderImg}'">
+            <div class="inv-info">
+              <div class="inv-name">${prod.name || prod.title || 'Unnamed Product'}</div>
+              <div class="inv-meta">
+                <span style="color:var(--primary); font-weight:800;">₹${(prod.price || 0).toLocaleString('en-IN')}</span>
+                <span>Stock: ${prod.stock !== undefined ? prod.stock : 'N/A'}</span>
+              </div>
+            </div>
+            <div style="font-size:13px; font-weight:800; background:var(--success-bg); color:var(--success); padding:6px 12px; border-radius:8px;">Select</div>
+          `;
+
+          row.addEventListener('click', async () => {
+            if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+            await updateSlotAssignment(activeSlotIndex, prod.id);
+            // Close search and any underlying sheet safely using history
+            history.back();
+            if (modalStack.includes('sheet')) history.back();
+          });
+
+          inventoryList.appendChild(row);
+        });
+
+      } catch (err) {
+        console.error("Inventory fetch error:", err);
+        loadingInventory.classList.remove('active');
+      }
+      isFetchingInventory = false;
+    }
+
+    const inventoryObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !isFetchingInventory && hasMoreInventory && !currentSearchKeyword) {
+        fetchInventory(false);
+      }
+    }, { rootMargin: "100px" });
+    inventoryObserver.observe(sentinelInventory);
+
+    // --- 6. Save Assignment to Single Homepage Document ---
+    async function updateSlotAssignment(slotIndex, productId) {
+      try {
+        currentLayoutData[slotIndex] = productId; // Assigns ID or null (remove)
+
+        const layoutDocRef = doc(db, "layout", "homepage");
+        
+        // Updates nested field in map without overwriting other slots
+        await setDoc(layoutDocRef, {
+          slots: {
+            [slotIndex]: productId 
+          },
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        if (navigator.vibrate) navigator.vibrate(20);
+        await renderSlotsFeed(); // Refresh main UI
+      } catch (err) {
+        console.error("Failed to update layout slot:", err);
+        alert("Failed to save slot assignment.");
+      }
+    }
+  </script>
+</body>
+</html>
