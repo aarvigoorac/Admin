@@ -88,6 +88,7 @@
     .empty-state svg { width: 64px; height: 64px; color: var(--border); margin-bottom: 16px; }
     .empty-state h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     
+    /* Strict Detailed Skeleton Loading */
     .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important; background-size: 200% 100% !important; animation: shimmer 1.5s infinite !important; border-radius: 6px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
@@ -124,6 +125,7 @@
     .detail-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
     .detail-row.total { font-weight: 800; font-size: 16px; color: var(--primary); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
 
+    /* Agent Card Refined with Overflow Prevention */
     .agent-card { background: var(--surface-color); border: 1.5px solid var(--border); padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease; user-select: none; overflow: hidden; }
     .agent-card:active { transform: scale(0.96); background: var(--bg-color); }
     .agent-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--bg-color); object-fit: cover; flex-shrink: 0; }
@@ -136,8 +138,9 @@
 
     .sentinel { height: 20px; width: 100%; margin-top: 10px; }
     .loading-agents { display: none; text-align: center; padding: 10px; color: var(--text-sub); font-size: 14px; font-weight: 600; width: 100%; }
-    .loading-agents.active { display: block; }
-    .loading-agents svg { animation: spin 1s linear infinite; width: 20px; height: 20px; stroke: currentColor; vertical-align: middle; margin-right: 8px; }
+    .loading-agents.active { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .loading-agents svg { animation: spin 1s linear infinite; width: 20px; height: 20px; stroke: currentColor; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -198,9 +201,10 @@
     </div>
     <div class="modal-scroll">
       <div id="m2-content"></div>
+      <!-- Paginating Spinner for Modal -->
       <div class="loading-agents" id="loading-agents">
         <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4"/></svg>
-        Loading...
+        Loading agents...
       </div>
       <div class="sentinel" id="agent-sentinel"></div>
     </div>
@@ -236,6 +240,7 @@
     const agentSentinel = document.getElementById('agent-sentinel');
 
     // State
+    let currentAuthUser = null;
     let currentAdminToken = null;
     let activeOrderData = null;
     let modalStack = [];
@@ -249,10 +254,24 @@
     let isSearchingAgents = false;
     let agentSearchDebounce;
 
+    // Detailed Skeletons Generators
+    const generateSkeletons = (count = 4) => Array(count).fill(`<div class="order-card" style="pointer-events:none;"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>`).join('');
+    
+    const generateAgentSkeletons = (count = 4) => Array(count).fill(`
+      <div class="agent-card" style="pointer-events:none;">
+        <div class="skeleton agent-avatar" style="border:none;"></div>
+        <div class="agent-info" style="display:flex; flex-direction:column; gap:6px;">
+          <div class="skeleton" style="height:16px; width:50%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:12px; width:70%; border-radius:4px;"></div>
+        </div>
+      </div>
+    `).join('');
+
     datePicker.value = new Date().toISOString().split('T')[0];
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
+        currentAuthUser = user;
         currentAdminToken = await user.getIdToken();
         fetchOrdersByDate(datePicker.value);
       }
@@ -281,13 +300,15 @@
     };
 
     const formatDate = (isoStr) => new Date(isoStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute:'2-digit' });
-    const generateSkeletons = (count = 4) => Array(count).fill(`<div class="order-card" style="pointer-events:none;"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>`).join('');
 
-    // --- REAL-TIME Order Fetching (Optimized with unsubscription) ---
+    // --- REAL-TIME Order Fetching (Optimized with unsubscription & flicker prevention) ---
     function fetchOrdersByDate(dateString) {
       if (unsubscribeFeed) unsubscribeFeed();
 
-      grid.innerHTML = generateSkeletons(6);
+      // Only inject skeletons if they are not already hardcoded/present to completely eliminate flickering
+      if (!grid.querySelector('.skeleton')) {
+        grid.innerHTML = generateSkeletons(6);
+      }
       emptyState.classList.remove('active');
       const start = new Date(dateString); start.setHours(0,0,0,0);
       const end = new Date(dateString); end.setHours(23,59,59,999);
@@ -318,7 +339,7 @@
     }
 
     function renderFeed(snapshot) {
-      grid.innerHTML = '';
+      grid.innerHTML = ''; // This smoothly replaces the initial skeletons with data
       if (snapshot.empty) return emptyState.classList.add('active');
       emptyState.classList.remove('active');
 
@@ -557,9 +578,7 @@
       });
     }
 
-    // --- Layer 2 Agent Pagination Engine (With Search UX) ---
-    
-    // Auto-focus cursor trick
+    // --- Layer 2 Agent Pagination Engine (With Exact ME Pinning) ---
     agentSearchInput.addEventListener('focus', function() {
       if(this.value === '@gmail.com') setTimeout(() => this.setSelectionRange(0, 0), 10);
     });
@@ -581,11 +600,15 @@
       isFetchingAgents = true;
       
       if (isNew) {
-        m2Content.innerHTML = '';
+        // Instantly inject skeletons synchronously to prevent blank spaces
+        if (m2Content.children.length === 0 || isSearchingAgents) {
+          m2Content.innerHTML = generateAgentSkeletons(4);
+        }
         lastAgentDoc = null;
         hasMoreAgents = true;
+      } else {
+        loadingAgents.style.display = 'flex'; // Use style to show only during pagination
       }
-      loadingAgents.classList.add('active');
 
       try {
         let q;
@@ -603,9 +626,24 @@
         }
 
         const snap = await getDocs(q);
-        loadingAgents.classList.remove('active');
 
-        if (snap.empty && isNew) {
+        // Fetch Logged-In User Data explicitly to guarantee it pins to the top
+        let meData = null;
+        if (isNew && !searchEmail && currentAuthUser) {
+          try {
+            const meDoc = await getDoc(doc(db, "users", currentAuthUser.uid));
+            if (meDoc.exists() && meDoc.data().agent === true) {
+              meData = meDoc.data();
+              meData.id = meDoc.id;
+            }
+          } catch(e) { console.warn("Failed to fetch ME doc", e); }
+        }
+
+        // Clear skeletons now that data is ready
+        if (isNew) m2Content.innerHTML = '';
+        loadingAgents.style.display = 'none';
+
+        if (snap.empty && isNew && !meData) {
           m2Content.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-sub); font-weight:600;">No active agents found.</div>`;
           isFetchingAgents = false;
           return;
@@ -614,37 +652,52 @@
         if (!searchEmail && snap.docs.length < 10) hasMoreAgents = false;
         else if (!searchEmail) lastAgentDoc = snap.docs[snap.docs.length - 1];
 
+        // 1. Render ME Card First (Pinned)
+        if (meData) {
+          renderAgentCard(meData, true);
+        }
+
+        // 2. Render the rest of the agents
         snap.docs.forEach(docSnap => {
+          // Skip if already pinned to avoid duplicates
+          if (meData && docSnap.id === meData.id && !searchEmail) return; 
           const agent = docSnap.data();
-          const card = document.createElement('div');
-          card.className = 'agent-card';
-          // Render SVG avatar & display Email instead of UID
-          card.innerHTML = `
-            <img src="${agentAvatarSvg}" class="agent-avatar">
-            <div class="agent-info">
-              <div class="agent-name">${agent.name || 'Agent'}</div>
-              <div class="agent-role">${agent.email || 'No email'}</div>
-            </div>
-          `;
-          card.addEventListener('click', async () => {
-            if (navigator.vibrate) navigator.vibrate([20, 40, 20]); // Happy assign vibe
-            const now = new Date().toISOString();
-            
-            await updateDoc(doc(db, 'orders', activeOrderData.id), {
-              agentId: docSnap.id,
-              agentName: agent.name || 'Agent',
-              status: 'assigned',
-              assignedAt: now,
-              updatedAt: now
-            });
-            history.back(); 
-            refreshCurrentOrder(); 
-          });
-          m2Content.appendChild(card);
+          agent.id = docSnap.id;
+          renderAgentCard(agent, (currentAuthUser && agent.id === currentAuthUser.uid));
         });
 
-      } catch(e) { console.error(e); loadingAgents.classList.remove('active'); }
+      } catch(e) { console.error(e); loadingAgents.style.display = 'none'; }
       isFetchingAgents = false;
+    }
+
+    function renderAgentCard(agent, isMe = false) {
+      const card = document.createElement('div');
+      card.className = 'agent-card';
+      
+      const meBadgeHtml = isMe ? `<span style="font-size:10px; background:var(--st-delivered-bg); color:var(--st-delivered); padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:800; border:1px solid var(--st-delivered);">ME</span>` : '';
+
+      card.innerHTML = `
+        <img src="${agentAvatarSvg}" class="agent-avatar">
+        <div class="agent-info">
+          <div class="agent-name">${agent.name || 'Agent'} ${meBadgeHtml}</div>
+          <div class="agent-role">${agent.email || 'No email'}</div>
+        </div>
+      `;
+      card.addEventListener('click', async () => {
+        if (navigator.vibrate) navigator.vibrate([20, 40, 20]); // Happy assign vibe
+        const now = new Date().toISOString();
+        
+        await updateDoc(doc(db, 'orders', activeOrderData.id), {
+          agentId: agent.id,
+          agentName: agent.name || 'Agent',
+          status: 'assigned',
+          assignedAt: now,
+          updatedAt: now
+        });
+        history.back(); 
+        refreshCurrentOrder(); 
+      });
+      m2Content.appendChild(card);
     }
 
     const agentObserver = new IntersectionObserver((entries) => {
