@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Orders - Aarvi Stores</title>
+  <style>
+    :root {
+      --bg-color: #f1f3f6;
+      --surface-color: #ffffff;
+      --text-main: #000000;
+      --text-sub: #666666;
+      --border: #e0e0e0;
+      --primary: #2874f0;
+      --primary-hover: #1e5bb8;
+      --skeleton-base: #e0e0e0;
+      --skeleton-shine: #f5f5f5;
+      
+      /* Status Colors */
+      --st-processing: #b86e00; --st-processing-bg: #fef0db;
+      --st-approved: #0c66e4;   --st-approved-bg: #e9f2ff;
+      --st-assigned: #5e4db2;   --st-assigned-bg: #f0eaff;
+      --st-out: #854800;        --st-out-bg: #ffe4c4;
+      --st-delivered: #137333;  --st-delivered-bg: #e6f4ea;
+      --st-rejected: #b3261e;   --st-rejected-bg: #f9dedc;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #121212;
+        --surface-color: #1e1e1e;
+        --text-main: #ffffff;
+        --text-sub: #a0a0a0;
+        --border: #333333;
+        --skeleton-base: #333333;
+        --skeleton-shine: #444444;
+        
+        --st-processing: #ffb52e; --st-processing-bg: #3e2723;
+        --st-approved: #579dff;   --st-approved-bg: #092147;
+        --st-assigned: #9f8fef;   --st-assigned-bg: #28214a;
+        --st-out: #ffb56b;        --st-out-bg: #3d2200;
+        --st-delivered: #81c995;  --st-delivered-bg: #1e3a29;
+        --st-rejected: #f2b8b5;   --st-rejected-bg: #410e0b;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { display: none; }
+    html, body { -ms-overflow-style: none; scrollbar-width: none; background-color: var(--bg-color); color: var(--text-main); }
+
+    .page-container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
+
+    /* Controls (Search & Date) */
+    .controls-header { position: sticky; top: 0; background: var(--bg-color); z-index: 50; padding: 12px 0; display: flex; gap: 12px; }
+    .search-wrap { flex: 1; position: relative; }
+    .search-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; stroke: var(--text-sub); stroke-width: 2.5; }
+    .search-input { width: 100%; padding: 14px 16px 14px 44px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface-color); color: var(--text-main); font-size: 15px; outline: none; }
+    .search-input:focus { border-color: var(--primary); }
+    
+    .date-picker { padding: 14px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface-color); color: var(--text-main); font-size: 15px; outline: none; font-weight: 600; cursor: pointer; }
+
+    /* Responsive Grid for Orders */
+    .orders-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 768px) { .orders-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    /* Order Card */
+    .order-card { background: var(--surface-color); border-radius: 16px; padding: 16px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.1s; }
+    .order-card:active { transform: scale(0.98); }
+    .oc-header { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .oc-id { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+    .oc-time { font-size: 13px; color: var(--text-sub); }
+    
+    .status-pill { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 50px; text-transform: capitalize; }
+    
+    .oc-body { display: flex; justify-content: space-between; align-items: center; }
+    .img-stack { display: flex; align-items: center; }
+    .img-circle { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-color); border: 2px solid var(--surface-color); margin-left: -12px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .img-circle:first-child { margin-left: 0; }
+    .img-circle img { width: 100%; height: 100%; object-fit: contain; }
+    .img-more { font-size: 12px; font-weight: 700; color: var(--text-sub); background: var(--skeleton-shine); }
+    .oc-price { font-size: 18px; font-weight: 800; color: var(--primary); text-align: right; }
+    .oc-items { font-size: 12px; color: var(--text-sub); font-weight: 600; margin-top: 4px; text-align: right; }
+
+    /* States & Skeletons */
+    .empty-state { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; grid-column: 1 / -1; }
+    .empty-state.active { display: flex; }
+    .empty-state svg { width: 64px; height: 64px; color: var(--border); margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    
+    .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Nested Modal System */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    
+    .side-modal { position: fixed; top: 0; right: 0; width: 100%; max-width: 600px; height: 100%; background: var(--bg-color); z-index: 1000; transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; }
+    .side-modal.active { transform: translateX(0); }
+    
+    .action-modal { position: fixed; bottom: 0; left: 0; width: 100%; max-height: 85vh; background: var(--bg-color); z-index: 2000; border-radius: 24px 24px 0 0; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); }
+    .action-modal.active { transform: translateY(0); }
+
+    /* Modal Internals */
+    .modal-header { display: flex; align-items: center; padding: 16px; background: var(--surface-color); border-bottom: 1px solid var(--border); gap: 12px; }
+    .btn-close { background: none; border: none; color: var(--text-main); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+    .modal-title { font-size: 18px; font-weight: 800; flex: 1; }
+    .modal-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 120px; }
+
+    /* Status Picker */
+    .status-picker { padding: 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface-color); color: var(--text-main); font-size: 15px; font-weight: 700; width: 100%; outline: none; margin-top: 12px; cursor: pointer; }
+
+    /* Layer 1 Action Bar */
+    .action-bar { position: absolute; bottom: 0; left: 0; width: 100%; padding: 16px; background: var(--surface-color); border-top: 1px solid var(--border); display: flex; gap: 12px; z-index: 10; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+    .btn { flex: 1; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; text-align: center; cursor: pointer; border: none; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .btn:disabled { opacity: 0.5; pointer-events: none; }
+    .btn-confirm { background: var(--st-approved); color: white; }
+    .btn-reject { background: var(--bg-color); color: var(--text-main); border: 1.5px solid var(--border); }
+    .btn-delete { background: var(--st-rejected-bg); color: var(--st-rejected); flex: 0 0 50px; }
+
+    /* Agent Card */
+    .agent-card { background: var(--surface-color); border: 1.5px solid var(--border); padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 16px; margin-top: 16px; cursor: pointer; }
+    .agent-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--skeleton-base); object-fit: cover; }
+    .agent-info { flex: 1; }
+    .agent-name { font-weight: 800; font-size: 16px; margin-bottom: 4px; }
+    .agent-role { font-size: 13px; color: var(--text-sub); font-weight: 600; }
+    .btn-assign { background: var(--st-assigned-bg); color: var(--st-assigned); width: 100%; margin-top: 16px; }
+
+    /* Detail Blocks */
+    .detail-block { background: var(--surface-color); padding: 16px; border-radius: 16px; border: 1px solid var(--border); }
+    .db-title { font-size: 14px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; margin-bottom: 12px; }
+    .detail-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+    .detail-row.total { font-weight: 800; font-size: 16px; color: var(--primary); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+
+  </style>
+</head>
+<body>
+
+  <div class="page-container">
+    <div class="controls-header">
+      <div class="search-wrap">
+        <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+        <input type="text" id="search-input" class="search-input" placeholder="Search Order ID...">
+      </div>
+      <input type="date" id="date-picker" class="date-picker">
+    </div>
+
+    <!-- Feed -->
+    <div class="orders-grid" id="orders-grid"></div>
+
+    <div class="empty-state" id="empty-state">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <h3 id="empty-title">No Orders Found</h3>
+      <p id="empty-desc">There are no orders for this date.</p>
+    </div>
+  </div>
+
+  <!-- Layer 1: Main Order Modal -->
+  <div class="modal-overlay" id="overlay-l1"></div>
+  <div class="side-modal" id="modal-l1">
+    <div class="modal-header">
+      <button class="btn-close" id="close-l1">
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+      </button>
+      <div class="modal-title" id="m1-title">Order Details</div>
+    </div>
+    <div class="modal-scroll" id="m1-content">
+      <!-- Injected Content -->
+    </div>
+    <div class="action-bar" id="m1-actions">
+      <!-- Injected Buttons -->
+    </div>
+  </div>
+
+  <!-- Layer 2: Agent Assignment Modal -->
+  <div class="modal-overlay" id="overlay-l2" style="z-index: 1999;"></div>
+  <div class="action-modal" id="modal-l2">
+    <div class="modal-header" style="border-radius: 24px 24px 0 0;">
+      <div class="modal-title">Select Delivery Agent</div>
+      <button class="btn-close" id="close-l2">
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+    <div class="modal-scroll" id="m2-content">
+      <!-- Agent Cards Injected Here -->
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from '../config.js';
+    import { collection, query, where, orderBy, getDocs, getDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // UI Elements
+    const datePicker = document.getElementById('date-picker');
+    const searchInput = document.getElementById('search-input');
+    const grid = document.getElementById('orders-grid');
+    const emptyState = document.getElementById('empty-state');
+    
+    // Layer 1
+    const modalL1 = document.getElementById('modal-l1');
+    const overlayL1 = document.getElementById('overlay-l1');
+    const closeL1 = document.getElementById('close-l1');
+    const m1Content = document.getElementById('m1-content');
+    const m1Actions = document.getElementById('m1-actions');
+
+    // Layer 2
+    const modalL2 = document.getElementById('modal-l2');
+    const overlayL2 = document.getElementById('overlay-l2');
+    const closeL2 = document.getElementById('close-l2');
+    const m2Content = document.getElementById('m2-content');
+
+    // State Variables
+    let currentAdminToken = null;
+    let activeOrderData = null;
+    let modalStack = [];
+    let debounceTimer;
+
+    const RENDER_API_URL = 'https://backend-ayvz.onrender.com/api/approve-zoho-order';
+
+    // Init Date Picker to Today
+    datePicker.value = new Date().toISOString().split('T')[0];
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentAdminToken = await user.getIdToken();
+        fetchOrdersByDate(datePicker.value);
+      }
+    });
+
+    // --- Helper Functions ---
+    const getStatusTheme = (status) => {
+      const s = (status || 'processing').toLowerCase();
+      if (s === 'approved') return 'st-approved';
+      if (s === 'assigned') return 'st-assigned';
+      if (s === 'out for delivery') return 'st-out';
+      if (s === 'delivered') return 'st-delivered';
+      if (s === 'rejected' || s === 'cancelled') return 'st-rejected';
+      return 'st-processing';
+    };
+
+    const formatDate = (isoStr) => {
+      return new Date(isoStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute:'2-digit' });
+    };
+
+    const generateSkeletons = (count = 4) => {
+      return Array(count).fill(`
+        <div class="order-card">
+          <div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div>
+          <div class="skeleton" style="height:40px; width:100%;"></div>
+        </div>
+      `).join('');
+    };
+
+    // --- Core Data Fetching ---
+    async function fetchOrdersByDate(dateString) {
+      grid.innerHTML = generateSkeletons(6);
+      emptyState.classList.remove('active');
+
+      const start = new Date(dateString); start.setHours(0,0,0,0);
+      const end = new Date(dateString); end.setHours(23,59,59,999);
+
+      try {
+        const q = query(
+          collection(db, "orders"),
+          where("createdAt", ">=", start.toISOString()),
+          where("createdAt", "<=", end.toISOString()),
+          orderBy("createdAt", "desc")
+        );
+        const snap = await getDocs(q);
+        renderFeed(snap);
+      } catch (e) {
+        console.error(e);
+        grid.innerHTML = '<p style="color:red">Error fetching orders.</p>';
+      }
+    }
+
+    async function fetchSingleOrder(orderId) {
+      grid.innerHTML = generateSkeletons(1);
+      emptyState.classList.remove('active');
+      try {
+        const docSnap = await getDoc(doc(db, "orders", orderId));
+        if (docSnap.exists()) {
+          renderFeed({ docs: [docSnap], empty: false });
+        } else {
+          renderFeed({ empty: true });
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    // --- Render Feed ---
+    function renderFeed(snapshot) {
+      grid.innerHTML = '';
+      if (snapshot.empty) {
+        emptyState.classList.add('active');
+        return;
+      }
+
+      snapshot.docs.forEach(docSnap => {
+        const order = docSnap.data();
+        order.id = docSnap.id;
+        
+        let imgs = '';
+        order.items.slice(0, 3).forEach(item => {
+          imgs += `<div class="img-circle"><img src="${item.image}"></div>`;
+        });
+        if (order.items.length > 3) imgs += `<div class="img-circle img-more">+${order.items.length - 3}</div>`;
+
+        const totalQty = order.items.reduce((sum, i) => sum + (i.qty || 1), 0);
+        const theme = getStatusTheme(order.status);
+
+        const card = document.createElement('div');
+        card.className = 'order-card';
+        card.innerHTML = `
+          <div class="oc-header">
+            <div>
+              <div class="oc-id">${order.id}</div>
+              <div class="oc-time">${formatDate(order.createdAt)}</div>
+            </div>
+            <div class="status-pill" style="background:var(--${theme}-bg); color:var(--${theme})">${order.status || 'Processing'}</div>
+          </div>
+          <div class="oc-body">
+            <div class="img-stack">${imgs}</div>
+            <div>
+              <div class="oc-price">₹${order.totalAmount.toLocaleString('en-IN')}</div>
+              <div class="oc-items">${totalQty} Item(s)</div>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', () => openLayer1(order));
+        grid.appendChild(card);
+      });
+    }
+
+    // --- Input Listeners ---
+    datePicker.addEventListener('change', (e) => {
+      searchInput.value = '';
+      fetchOrdersByDate(e.target.value);
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      const val = e.target.value.trim();
+      debounceTimer = setTimeout(() => {
+        if (val.length > 0) fetchSingleOrder(val);
+        else fetchOrdersByDate(datePicker.value);
+      }, 500);
+    });
+
+    // --- Nested Modals Routing ---
+    function openLayer1(order) {
+      activeOrderData = order;
+      renderLayer1(order);
+      modalL1.classList.add('active');
+      overlayL1.classList.add('active');
+      modalStack.push('L1');
+      history.pushState({ modal: 'L1' }, '');
+    }
+
+    function openLayer2() {
+      fetchAgents();
+      modalL2.classList.add('active');
+      overlayL2.classList.add('active');
+      modalStack.push('L2');
+      history.pushState({ modal: 'L2' }, '');
+    }
+
+    function closeTopLayer() {
+      const top = modalStack.pop();
+      if (top === 'L2') {
+        modalL2.classList.remove('active');
+        overlayL2.classList.remove('active');
+      } else if (top === 'L1') {
+        modalL1.classList.remove('active');
+        overlayL1.classList.remove('active');
+        activeOrderData = null;
+      }
+    }
+
+    window.addEventListener('popstate', (e) => {
+      if (modalStack.length > 0) closeTopLayer();
+    });
+
+    [closeL1, overlayL1, closeL2, overlayL2].forEach(btn => {
+      btn.addEventListener('click', () => { if(modalStack.length > 0) history.back(); });
+    });
+
+    // --- Layer 1 Logic (Order View) ---
+    function renderLayer1(order) {
+      document.getElementById('m1-title').innerText = order.id;
+      const isRejected = order.status === 'rejected';
+      const isApproved = order.zoho_invoice_id || order.status === 'approved';
+
+      // Status Dropdown Options
+      const statuses = ['processing', 'approved', 'assigned', 'out for delivery', 'delivered', 'rejected', 'cancelled'];
+      let selectHtml = `<select class="status-picker" id="status-picker">`;
+      statuses.forEach(s => {
+        selectHtml += `<option value="${s}" ${order.status === s ? 'selected' : ''}>${s.toUpperCase()}</option>`;
+      });
+      selectHtml += `</select>`;
+
+      // Agent Block
+      let agentHtml = '';
+      if (order.agentId) {
+        agentHtml = `
+          <div class="db-title" style="margin-top:20px;">Assigned Agent</div>
+          <div class="agent-card" style="margin-top:0;" onclick="openLayer2()">
+            <img src="${order.agentImg || 'default.png'}" class="agent-avatar">
+            <div class="agent-info">
+              <div class="agent-name">${order.agentName}</div>
+              <div class="agent-role">Delivery Partner</div>
+            </div>
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg>
+          </div>
+        `;
+      } else if (!isRejected) {
+        agentHtml = `<button class="btn btn-assign" onclick="openLayer2()">+ Assign Delivery Agent</button>`;
+      }
+
+      m1Content.innerHTML = `
+        <div class="detail-block">
+          <div class="db-title">Order Status</div>
+          ${selectHtml}
+          ${agentHtml}
+        </div>
+        
+        <div class="detail-block">
+          <div class="db-title">Customer Details</div>
+          <div style="font-size:15px; font-weight:700; margin-bottom:4px;">${order.deliveryAddress?.name || 'Walk-in'}</div>
+          <div style="font-size:14px;">${order.deliveryAddress?.city || 'No address provided'}</div>
+          <div style="font-size:14px; margin-top:8px; font-weight:600;">Ph: ${order.deliveryAddress?.phone || 'N/A'}</div>
+        </div>
+
+        <div class="detail-block">
+          <div class="db-title">Payment Summary</div>
+          <div class="detail-row"><span>Method</span><b>${order.paymentMethod || 'COD'}</b></div>
+          <div class="detail-row total"><span>Total</span><span>₹${order.totalAmount.toLocaleString()}</span></div>
+        </div>
+      `;
+
+      // Render Action Buttons
+      m1Actions.innerHTML = `
+        <button class="btn btn-reject" id="btn-reject" ${isApproved || isRejected ? 'disabled' : ''}>Reject</button>
+        <button class="btn btn-confirm" id="btn-confirm" ${isApproved || isRejected ? 'disabled' : ''}>${isApproved ? 'Approved' : 'Approve & Sync'}</button>
+        <button class="btn btn-delete" id="btn-delete"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg></button>
+      `;
+
+      // Status Manual Override
+      document.getElementById('status-picker').addEventListener('change', async (e) => {
+        const newStatus = e.target.value;
+        await updateDoc(doc(db, 'orders', order.id), { status: newStatus });
+        refreshCurrentOrder();
+      });
+
+      // Reject Button
+      document.getElementById('btn-reject').addEventListener('click', async () => {
+        if(confirm('Are you sure you want to reject this order?')) {
+          await updateDoc(doc(db, 'orders', order.id), { status: 'rejected' });
+          refreshCurrentOrder();
+        }
+      });
+
+      // Delete Button
+      document.getElementById('btn-delete').addEventListener('click', async () => {
+        if(confirm('DANGER: Permanently delete this order document?')) {
+          await deleteDoc(doc(db, 'orders', order.id));
+          history.back(); // Close modal
+          fetchOrdersByDate(datePicker.value); // Refresh feed
+        }
+      });
+
+      // Confirm & Sync (Render API)
+      document.getElementById('btn-confirm').addEventListener('click', async (e) => {
+        const btn = e.target;
+        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle><path d="M12 2v4"></path></svg>`;
+        btn.style.pointerEvents = 'none';
+
+        try {
+          const res = await fetch(RENDER_API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentAdminToken}`
+            },
+            body: JSON.stringify({ orderId: order.id })
+          });
+          
+          const data = await res.json();
+          if(data.success) refreshCurrentOrder();
+          else alert(data.error || 'Failed to sync with Zoho');
+        } catch (err) {
+          alert("Network error connecting to Render server.");
+          btn.innerHTML = 'Approve & Sync';
+          btn.style.pointerEvents = 'auto';
+        }
+      });
+    }
+
+    // --- Layer 2 Logic (Agent Assignment) ---
+    window.openLayer2 = openLayer2; // Expose to inline HTML onclick
+
+    async function fetchAgents() {
+      m2Content.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-sub);">Loading agents...</div>`;
+      try {
+        const q = query(collection(db, "users"), where("agent", "==", true));
+        const snap = await getDocs(q);
+        
+        m2Content.innerHTML = '';
+        if(snap.empty) {
+          m2Content.innerHTML = `<div style="text-align:center; padding:20px;">No agents found in database.</div>`;
+          return;
+        }
+
+        snap.docs.forEach(docSnap => {
+          const agent = docSnap.data();
+          const card = document.createElement('div');
+          card.className = 'agent-card';
+          card.innerHTML = `
+            <img src="${agent.profilePic || 'default.png'}" class="agent-avatar">
+            <div class="agent-info">
+              <div class="agent-name">${agent.name || 'Agent'}</div>
+              <div class="agent-role">${docSnap.id}</div>
+            </div>
+          `;
+          card.addEventListener('click', async () => {
+            // Assign Agent Logic
+            await updateDoc(doc(db, 'orders', activeOrderData.id), {
+              agentId: docSnap.id,
+              agentName: agent.name || 'Agent',
+              agentImg: agent.profilePic || '',
+              status: 'assigned'
+            });
+            history.back(); // Close Layer 2
+            refreshCurrentOrder(); // Refresh Layer 1 UI
+          });
+          m2Content.appendChild(card);
+        });
+      } catch(e) { console.error(e); }
+    }
+
+    async function refreshCurrentOrder() {
+      if(!activeOrderData) return;
+      const docSnap = await getDoc(doc(db, 'orders', activeOrderData.id));
+      if(docSnap.exists()) {
+        activeOrderData = docSnap.data();
+        activeOrderData.id = docSnap.id;
+        renderLayer1(activeOrderData);
+        if(!searchInput.value) fetchOrdersByDate(datePicker.value); // Sync background grid
+      }
+    }
+  </script>
+</body>
+</html>
