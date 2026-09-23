@@ -82,8 +82,9 @@
     .empty-state svg { width: 64px; height: 64px; color: var(--border); margin-bottom: 16px; }
     .empty-state h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     
-    /* Detailed Skeleton Loading */
-    .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+    /* Strict Detailed Skeleton Loading */
+    .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important; background-size: 200% 100% !important; animation: shimmer 1.5s infinite !important; border-radius: 6px; }
+    .skeleton.u-avatar { border: none !important; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     
     .sentinel { height: 20px; width: 100%; margin-top: 10px; }
@@ -386,11 +387,13 @@
         // Fetch Logged-In User Data explicitly to pin to the top
         let meData = null;
         if (isNewFetch && !searchEmail && currentAuthUser) {
-          const meDoc = await getDoc(doc(db, "users", currentAuthUser.uid));
-          if (meDoc.exists()) {
-            meData = meDoc.data();
-            meData.id = meDoc.id;
-          }
+          try {
+            const meDoc = await getDoc(doc(db, "users", currentAuthUser.uid));
+            if (meDoc.exists()) {
+              meData = meDoc.data();
+              meData.id = meDoc.id;
+            }
+          } catch(e) { console.warn("Failed to fetch ME document", e); }
         }
 
         if (isNewFetch) grid.innerHTML = '';
@@ -602,10 +605,22 @@
       try {
         await updateDoc(doc(db, 'users', userToRemove.id), { admin: false, updatedAt: new Date().toISOString() });
         
-        // 1. Remove from Modal UI instantly
+        // 1. Smoothly Collapse and Remove from Modal UI instantly
+        rowToRemove.style.overflow = 'hidden';
+        rowToRemove.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
         rowToRemove.style.opacity = '0';
-        rowToRemove.style.transform = 'scale(0.95)';
-        setTimeout(() => rowToRemove.remove(), 200);
+        rowToRemove.style.height = '0px';
+        rowToRemove.style.paddingTop = '0px';
+        rowToRemove.style.paddingBottom = '0px';
+        rowToRemove.style.marginTop = '0px';
+        rowToRemove.style.marginBottom = '0px';
+        rowToRemove.style.borderWidth = '0px';
+        
+        setTimeout(() => {
+          if (rowToRemove && rowToRemove.parentNode) {
+            rowToRemove.parentNode.removeChild(rowToRemove);
+          }
+        }, 300);
 
         // 2. Cross-UI Optimistic Update (Update main background feed if visible)
         const badgeEl = document.getElementById(`badge-${userToRemove.id}`);
