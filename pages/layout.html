@@ -239,7 +239,7 @@
 
   <script type="module">
     import { auth, db } from '../config.js';
-    import { collection, query, where, orderBy, limit, startAfter, getDocs, getDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, query, where, orderBy, limit, getDocs, getDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     // Clean SVG Fallback Placeholder for missing images
@@ -277,10 +277,8 @@
     let activeSlotIndex = null;
     let inventorySearchDebounce;
 
-    // Inventory Pagination State
-    let lastInventoryDoc = null;
+    // Locked Pagination State
     let isFetchingInventory = false;
-    let hasMoreInventory = true;
     let currentSearchKeyword = '';
 
     // Smart Image Extractor based on search.html structure
@@ -457,13 +455,11 @@
         inventorySearchInput.value = '';
         clearSearchBtn.style.display = 'none';
         currentSearchKeyword = '';
-        lastInventoryDoc = null;
-        hasMoreInventory = true;
         
         inventoryList.innerHTML = generateInventorySkeletons(4);
         document.getElementById('inventory-list').scrollTop = 0;
         
-        fetchInventory(true);
+        fetchInventory();
 
         overlaySearch.classList.add('active');
         modalSearch.classList.add('active');
@@ -506,20 +502,18 @@
       }
     });
 
-    // --- 5. Layer 2: Inventory Search (Matched directly to search.html) ---
+    // --- 5. Layer 2: Inventory Search (STRICTLY NO PAGINATION) ---
     function openInventorySearchModal(slotIndex) {
       activeSlotIndex = slotIndex;
       searchModalTitle.innerText = `Assign to Slot #${slotIndex}`;
       inventorySearchInput.value = '';
       clearSearchBtn.style.display = 'none';
       currentSearchKeyword = '';
-      lastInventoryDoc = null;
-      hasMoreInventory = true;
       
       inventoryList.innerHTML = generateInventorySkeletons(4);
       document.getElementById('inventory-list').scrollTop = 0;
       
-      fetchInventory(true);
+      fetchInventory();
 
       overlaySearch.classList.add('active');
       modalSearch.classList.add('active');
@@ -536,7 +530,7 @@
 
       inventorySearchDebounce = setTimeout(() => {
         currentSearchKeyword = val;
-        fetchInventory(true, val);
+        fetchInventory(val);
       }, 300); // Debounce speed matched to search.html
     });
 
@@ -545,22 +539,17 @@
       inventorySearchInput.value = '';
       clearSearchBtn.style.display = 'none';
       currentSearchKeyword = '';
-      fetchInventory(true, '');
+      fetchInventory('');
       inventorySearchInput.focus();
     });
 
-    async function fetchInventory(isNew = false, keyword = '') {
-      if (isFetchingInventory || (!hasMoreInventory && !isNew)) return;
+    // Fetch Inventory strictly locked to limit(10) with zero continuation
+    async function fetchInventory(keyword = '') {
+      if (isFetchingInventory) return;
       isFetchingInventory = true;
       
-      if (isNew) {
-        if (inventoryList.children.length === 0 || currentSearchKeyword) {
-          inventoryList.innerHTML = generateInventorySkeletons(4);
-        }
-        lastInventoryDoc = null;
-        hasMoreInventory = true;
-      } else {
-        loadingInventory.style.display = 'flex';
+      if (inventoryList.children.length === 0 || currentSearchKeyword) {
+        inventoryList.innerHTML = generateInventorySkeletons(4);
       }
 
       try {
@@ -568,32 +557,21 @@
         if (keyword.length > 0) {
           const searchWords = keyword.split(' ').filter(word => word.trim().length > 0);
           const queryConstraints = searchWords.map(word => where(`searchKeywords.${word}`, "==", true));
-          
-          // No pagination for exact search, strict limit to 10
           q = query(collection(db, "products"), ...queryConstraints, limit(10));
-          hasMoreInventory = false; 
         } else {
-          // Default query strictly set to limit(10) with normal pagination
-          if (isNew) {
-            q = query(collection(db, "products"), limit(10));
-          } else {
-            q = query(collection(db, "products"), startAfter(lastInventoryDoc), limit(10));
-          }
+          q = query(collection(db, "products"), orderBy("name"), limit(10));
         }
 
         const snap = await getDocs(q);
         
-        if (isNew) inventoryList.innerHTML = '';
-        loadingInventory.style.display = 'none';
+        inventoryList.innerHTML = '';
+        loadingInventory.style.display = 'none'; // Ensure spinner stays hidden permanently
 
-        if (snap.empty && isNew) {
+        if (snap.empty) {
           inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub); font-weight:600;">No products match your search.</div>`;
           isFetchingInventory = false;
           return;
         }
-
-        if (snap.docs.length < 10) hasMoreInventory = false;
-        else lastInventoryDoc = snap.docs[snap.docs.length - 1];
 
         snap.docs.forEach(docSnap => {
           const prod = docSnap.data();
@@ -633,13 +611,9 @@
       isFetchingInventory = false;
     }
 
-    // Scroll Bug Fix: Root margin set to 0px, heavily locked logic
-    const inventoryObserver = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !isFetchingInventory && hasMoreInventory) {
-        fetchInventory(false, currentSearchKeyword);
-      }
-    }, { rootMargin: "0px" });
-    inventoryObserver.observe(sentinelInventory);
+    // Removed pagination observer as requested: strictly limited to 10 products
+    // const inventoryObserver = new IntersectionObserver(...)
+    // inventoryObserver.observe(sentinelInventory);
 
     // --- 6. Save Assignment to Single Homepage Document ---
     async function updateSlotAssignment(slotIndex, productId) {
