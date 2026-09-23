@@ -111,7 +111,7 @@
     .clear-btn { position: absolute; right: 16px; background: var(--skeleton-base); border: none; width: 24px; height: 24px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; color: var(--text-sub); }
     .clear-btn svg { left: auto; position: static; width: 14px; height: 14px; stroke: currentColor; }
 
-    .full-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .full-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 
     /* Enlarged Inventory Item Cards */
     .inventory-item { background: var(--surface-color); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 20px; cursor: pointer; transition: transform 0.15s; user-select: none; }
@@ -441,8 +441,32 @@
 
       btnSheetChange.onclick = () => {
         if (navigator.vibrate) navigator.vibrate(15);
-        history.back(); // close layer 1
-        openInventorySearchModal(slotIndex); // open layer 2
+        
+        // Instant visual swap from Layer 1 to Layer 2
+        modalSheet.classList.remove('active');
+        overlaySheet.classList.remove('active');
+        
+        // Safely swap the history state without triggering the back navigation popstate close
+        modalStack.pop();
+        history.replaceState({ modal: 'search' }, '');
+        modalStack.push('search');
+        
+        // Setup and open Search Modal explicitly
+        activeSlotIndex = slotIndex;
+        searchModalTitle.innerText = `Assign to Slot #${slotIndex}`;
+        inventorySearchInput.value = '';
+        clearSearchBtn.style.display = 'none';
+        currentSearchKeyword = '';
+        lastInventoryDoc = null;
+        hasMoreInventory = true;
+        
+        inventoryList.innerHTML = generateInventorySkeletons(4);
+        document.getElementById('inventory-list').scrollTop = 0;
+        
+        fetchInventory(true);
+
+        overlaySearch.classList.add('active');
+        modalSearch.classList.add('active');
       };
 
       btnSheetRemove.onclick = () => {
@@ -545,13 +569,11 @@
           const searchWords = keyword.split(' ').filter(word => word.trim().length > 0);
           const queryConstraints = searchWords.map(word => where(`searchKeywords.${word}`, "==", true));
           
-          if (isNew) {
-            q = query(collection(db, "products"), ...queryConstraints, limit(10));
-          } else {
-            q = query(collection(db, "products"), ...queryConstraints, startAfter(lastInventoryDoc), limit(10));
-          }
+          // No pagination for exact search, strict limit to 10
+          q = query(collection(db, "products"), ...queryConstraints, limit(10));
+          hasMoreInventory = false; 
         } else {
-          // Default query strictly set to limit(10)
+          // Default query strictly set to limit(10) with normal pagination
           if (isNew) {
             q = query(collection(db, "products"), limit(10));
           } else {
@@ -597,7 +619,8 @@
             btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="animation: spin 1s linear infinite; vertical-align:middle;"><circle cx="12" cy="12" r="10" stroke-opacity="0.3"></circle><path d="M12 2v4"></path></svg>`;
             
             await updateSlotAssignment(activeSlotIndex, prod.id);
-            history.back(); // close layer 2 search modal
+            // We must go back in history to properly clear the modal state
+            history.back(); 
           });
 
           inventoryList.appendChild(row);
