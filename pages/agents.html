@@ -16,6 +16,8 @@
       --skeleton-shine: #f5f5f5;
       --success: #137333;
       --success-bg: #e6f4ea;
+      --warning: #b3261e;
+      --warning-bg: #f9dedc;
       --assigned: #5e4db2;
       --assigned-bg: #f0eaff;
     }
@@ -31,6 +33,8 @@
         --skeleton-shine: #444444;
         --success: #81c995;
         --success-bg: #1e3a29;
+        --warning: #f2b8b5;
+        --warning-bg: #410e0b;
         --assigned: #9f8fef;
         --assigned-bg: #28214a;
       }
@@ -42,15 +46,19 @@
 
     .page-container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
 
-    /* Search Bar */
-    .controls-header { position: sticky; top: 0; background: var(--bg-color); z-index: 50; padding: 12px 0; display: flex; gap: 12px; }
+    /* Controls Header */
+    .controls-header { position: sticky; top: 0; background: var(--bg-color); z-index: 50; padding: 12px 0; display: flex; gap: 12px; align-items: center; }
     .search-wrap { flex: 1; position: relative; }
     .search-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; stroke: var(--text-sub); stroke-width: 2.5; transition: stroke 0.3s ease; }
     .search-input { width: 100%; padding: 14px 16px 14px 44px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface-color); color: var(--text-main); font-size: 15px; outline: none; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
     .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(40, 116, 240, 0.1); }
     .search-input:focus + svg { stroke: var(--primary); }
 
-    /* User Grid */
+    .btn-manage { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--assigned-bg); color: var(--assigned); border: 1.5px solid var(--assigned); padding: 14px 16px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; transition: transform 0.15s, opacity 0.2s; white-space: nowrap; }
+    .btn-manage:active { transform: scale(0.95); opacity: 0.8; }
+    .btn-manage svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2.5; }
+
+    /* Users Grid */
     .users-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
     @media (min-width: 768px) { .users-grid { grid-template-columns: repeat(2, 1fr); } }
 
@@ -58,7 +66,7 @@
     .user-card:active { transform: scale(0.97); box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: var(--bg-color); }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     
-    .u-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--skeleton-base); object-fit: cover; flex-shrink: 0; }
+    .u-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--skeleton-base); object-fit: cover; flex-shrink: 0; border: 2px solid var(--bg-color); }
     .u-info { flex: 1; min-width: 0; }
     .u-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
     .u-email { font-size: 13px; color: var(--text-sub); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -77,24 +85,26 @@
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     
     .sentinel { height: 20px; width: 100%; margin-top: 10px; }
-    .loading-more { display: none; text-align: center; padding: 10px; color: var(--text-sub); font-size: 14px; font-weight: 600; width: 100%; }
-    .loading-more.active { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .loading-more { display: none; text-align: center; padding: 10px; color: var(--text-sub); font-size: 14px; font-weight: 600; width: 100%; align-items: center; justify-content: center; gap: 8px; }
+    .loading-more.active { display: flex; }
     .loading-more svg { animation: spin 1s linear infinite; width: 20px; height: 20px; stroke: currentColor; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    /* Modal / Bottom Sheet (75% height) */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); }
+    /* Shared Modal Styles */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     
-    .bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; height: 75vh; max-height: 75vh; background: var(--bg-color); z-index: 2000; border-radius: 24px 24px 0 0; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); }
-    .bottom-sheet.active { transform: translateY(0); }
-
-    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border); z-index: 10; position: sticky; top: 0; }
     .btn-close { background: var(--bg-color); border: none; color: var(--text-main); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: transform 0.1s; }
     .btn-close:active { transform: scale(0.9); }
     .modal-title { font-size: 18px; font-weight: 800; }
-    
-    .modal-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 100px; }
+
+    /* Edit Bottom Sheet (75%) */
+    #overlay-edit { z-index: 1999; }
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; height: 75vh; background: var(--bg-color); z-index: 2000; border-radius: 24px 24px 0 0; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); }
+    .bottom-sheet.active { transform: translateY(0); }
+    .bottom-sheet .modal-header { border-radius: 24px 24px 0 0; }
+    .sheet-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 100px; }
 
     /* Form Elements */
     .form-group { display: flex; flex-direction: column; gap: 8px; background: var(--surface-color); padding: 16px; border-radius: 16px; border: 1px solid var(--border); }
@@ -103,12 +113,11 @@
     .form-input:focus { border-color: var(--primary); background: var(--surface-color); }
     .form-readonly { font-size: 15px; color: var(--text-sub); font-weight: 500; padding: 4px 0; }
 
-    /* iOS Style Toggle Switch */
+    /* iOS Toggle */
     .toggle-row { display: flex; justify-content: space-between; align-items: center; }
     .toggle-info { display: flex; flex-direction: column; gap: 4px; }
     .toggle-title { font-size: 16px; font-weight: 800; color: var(--text-main); }
     .toggle-desc { font-size: 13px; color: var(--text-sub); }
-    
     .switch { position: relative; display: inline-block; width: 52px; height: 30px; flex-shrink: 0; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .3s; border-radius: 34px; }
@@ -116,11 +125,36 @@
     input:checked + .slider { background-color: var(--success); }
     input:checked + .slider:before { transform: translateX(22px); }
 
-    /* Action Bar */
-    .action-bar { position: absolute; bottom: 0; left: 0; width: 100%; padding: 16px; background: var(--surface-color); border-top: 1px solid var(--border); display: flex; gap: 12px; z-index: 10; padding-bottom: calc(16px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 12px rgba(0,0,0,0.03); }
-    .btn-save { flex: 1; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 800; text-align: center; cursor: pointer; border: none; background: var(--primary); color: white; display: flex; justify-content: center; align-items: center; gap: 8px; transition: transform 0.15s, opacity 0.2s, box-shadow 0.2s; box-shadow: 0 4px 12px rgba(40, 116, 240, 0.25); }
+    /* Save Button Bar */
+    .action-bar { position: absolute; bottom: 0; left: 0; width: 100%; padding: 16px; background: var(--surface-color); border-top: 1px solid var(--border); display: flex; z-index: 10; padding-bottom: calc(16px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 12px rgba(0,0,0,0.03); }
+    .btn-save { flex: 1; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 800; border: none; background: var(--primary); color: white; display: flex; justify-content: center; align-items: center; gap: 8px; transition: transform 0.15s, opacity 0.2s; box-shadow: 0 4px 12px rgba(40, 116, 240, 0.25); cursor: pointer; }
     .btn-save:active { transform: scale(0.97); opacity: 0.9; }
-    .btn-save:disabled { opacity: 0.7; pointer-events: none; }
+
+    /* Full Screen Agent Modal */
+    #overlay-full { z-index: 2499; }
+    .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2500; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; }
+    .full-modal.active { transform: translateY(0); }
+    .full-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .agent-row { display: flex; align-items: center; justify-content: space-between; background: var(--surface-color); padding: 12px 16px; border-radius: 16px; border: 1px solid var(--border); animation: fadeIn 0.3s ease; }
+    .btn-remove { background: var(--warning-bg); color: var(--warning); border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; transition: transform 0.15s; display: flex; align-items: center; gap: 6px; }
+    .btn-remove:active { transform: scale(0.92); }
+
+    /* HTML Confirmation Dialog */
+    #overlay-dialog { z-index: 2999; }
+    .dialog-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: var(--surface-color); z-index: 3000; border-radius: 20px; padding: 24px; width: 90%; max-width: 360px; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .dialog-box.active { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
+    
+    .dialog-icon { width: 56px; height: 56px; background: var(--warning-bg); color: var(--warning); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .dialog-icon svg { width: 28px; height: 28px; stroke: currentColor; stroke-width: 2.5; }
+    .dialog-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: var(--text-main); }
+    .dialog-desc { font-size: 14px; color: var(--text-sub); margin-bottom: 24px; line-height: 1.5; }
+    .dialog-actions { display: flex; width: 100%; gap: 12px; }
+    .btn-dialog { flex: 1; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; transition: transform 0.15s; }
+    .btn-dialog:active { transform: scale(0.95); }
+    .btn-dialog.cancel { background: var(--bg-color); color: var(--text-main); border: 1.5px solid var(--border); }
+    .btn-dialog.confirm { background: var(--warning); color: white; box-shadow: 0 4px 12px rgba(179, 38, 30, 0.2); }
+
   </style>
 </head>
 <body>
@@ -129,11 +163,15 @@
     <div class="controls-header">
       <div class="search-wrap">
         <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-        <input type="email" id="search-input" class="search-input" placeholder="Search exact email address...">
+        <input type="email" id="search-input" class="search-input" placeholder="Search exact email...">
       </div>
+      <button class="btn-manage" id="btn-open-agents">
+        <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+        Active Agents
+      </button>
     </div>
 
-    <!-- Feed -->
+    <!-- Main Users Feed -->
     <div class="users-grid" id="users-grid"></div>
 
     <div class="empty-state" id="empty-state">
@@ -149,31 +187,27 @@
     <div class="sentinel" id="sentinel"></div>
   </div>
 
-  <!-- Bottom Sheet Modal (75% height) -->
-  <div class="modal-overlay" id="modal-bg"></div>
-  <div class="bottom-sheet" id="bottom-sheet">
+  <!-- Layer 1: Edit Profile (75% Bottom Sheet) -->
+  <div class="modal-overlay" id="overlay-edit"></div>
+  <div class="bottom-sheet" id="modal-edit">
     <div class="modal-header">
       <div class="modal-title">Edit User Profile</div>
-      <button class="btn-close" id="btn-close">
+      <button class="btn-close" id="btn-close-edit">
         <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
     </div>
-    
-    <div class="modal-scroll">
+    <div class="sheet-scroll">
       <div style="display:flex; justify-content:center; margin-bottom:10px;">
         <img src="" id="sheet-avatar" class="u-avatar" style="width:80px; height:80px; border:3px solid var(--border);">
       </div>
-
       <div class="form-group">
         <div class="form-label">Email Address (Read-Only)</div>
         <div class="form-readonly" id="sheet-email">user@example.com</div>
       </div>
-
       <div class="form-group">
         <div class="form-label">Full Name</div>
         <input type="text" id="sheet-name" class="form-input" placeholder="Enter user's full name">
       </div>
-
       <div class="form-group">
         <div class="toggle-row">
           <div class="toggle-info">
@@ -187,9 +221,39 @@
         </div>
       </div>
     </div>
-    
-    <div class="action-bar">
-      <button class="btn-save" id="btn-save">Save Changes</button>
+    <div class="action-bar"><button class="btn-save" id="btn-save">Save Changes</button></div>
+  </div>
+
+  <!-- Layer 2: Full Screen Active Agents List -->
+  <div class="modal-overlay" id="overlay-full"></div>
+  <div class="full-modal" id="modal-full">
+    <div class="modal-header">
+      <div class="modal-title">Active Delivery Agents</div>
+      <button class="btn-close" id="btn-close-full">
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+      </button>
+    </div>
+    <div class="full-scroll" id="agent-list-container">
+      <!-- Agent rows injected here -->
+    </div>
+    <div class="loading-more" id="loading-agents">
+      <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4"/></svg>
+      Loading agents...
+    </div>
+    <div class="sentinel" id="sentinel-agents"></div>
+  </div>
+
+  <!-- Layer 3: HTML Confirmation Dialog -->
+  <div class="modal-overlay" id="overlay-dialog"></div>
+  <div class="dialog-box" id="modal-dialog">
+    <div class="dialog-icon">
+      <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.66-1.546" /></svg>
+    </div>
+    <div class="dialog-title">Remove Agent Access?</div>
+    <div class="dialog-desc">This user will lose access to the delivery partner app immediately. They will revert to a standard customer.</div>
+    <div class="dialog-actions">
+      <button class="btn-dialog cancel" id="btn-dialog-cancel">Cancel</button>
+      <button class="btn-dialog confirm" id="btn-dialog-confirm">Remove</button>
     </div>
   </div>
 
@@ -198,55 +262,59 @@
     import { collection, query, where, orderBy, limit, startAfter, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // UI Elements
+    const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+
+    // Background Feed UI
     const searchInput = document.getElementById('search-input');
     const grid = document.getElementById('users-grid');
     const emptyState = document.getElementById('empty-state');
     const loadingMore = document.getElementById('loading-more');
     const sentinel = document.getElementById('sentinel');
     
-    // Modal Elements
-    const modalBg = document.getElementById('modal-bg');
-    const bottomSheet = document.getElementById('bottom-sheet');
-    const btnClose = document.getElementById('btn-close');
+    // Layer 1: Edit Modal
+    const modalEdit = document.getElementById('modal-edit');
+    const overlayEdit = document.getElementById('overlay-edit');
     const sheetAvatar = document.getElementById('sheet-avatar');
     const sheetEmail = document.getElementById('sheet-email');
     const sheetName = document.getElementById('sheet-name');
     const sheetAgentToggle = document.getElementById('sheet-agent-toggle');
     const btnSave = document.getElementById('btn-save');
 
-    // State Variables
+    // Layer 2: Manage Agents Modal
+    const modalFull = document.getElementById('modal-full');
+    const overlayFull = document.getElementById('overlay-full');
+    const agentListContainer = document.getElementById('agent-list-container');
+    const loadingAgents = document.getElementById('loading-agents');
+    const sentinelAgents = document.getElementById('sentinel-agents');
+
+    // Layer 3: Confirm Dialog
+    const modalDialog = document.getElementById('modal-dialog');
+    const overlayDialog = document.getElementById('overlay-dialog');
+    const btnConfirm = document.getElementById('btn-dialog-confirm');
+
+    // Global State
+    let modalStack = [];
+    let debounceTimer;
+
+    // Feed State
     let lastVisibleDoc = null;
     let isFetching = false;
     let hasMoreDocs = true;
-    let debounceTimer;
     let isSearching = false;
-    let isModalOpen = false;
-    
-    // Cache for currently edited user
-    let activeUser = null;
+    let activeUserForEdit = null;
 
-    const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+    // Agents List State
+    let lastAgentDoc = null;
+    let isFetchingAgentsList = false;
+    let hasMoreAgentsList = true;
+    let userToRemove = null;
+    let rowToRemove = null;
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        fetchUsers(true);
-      }
-    });
+    onAuthStateChanged(auth, (user) => { if (user) fetchUsers(true); });
 
-    const generateSkeletons = (count = 6) => {
-      return Array(count).fill(`
-        <div class="user-card" style="pointer-events:none;">
-          <div class="skeleton u-avatar"></div>
-          <div class="u-info" style="display:flex; flex-direction:column; gap:8px;">
-            <div class="skeleton" style="height:18px; width:60%; border-radius:4px;"></div>
-            <div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div>
-          </div>
-        </div>
-      `).join('');
-    };
+    const generateSkeletons = (count = 6) => Array(count).fill(`<div class="user-card" style="pointer-events:none;"><div class="skeleton u-avatar"></div><div class="u-info" style="display:flex; flex-direction:column; gap:8px;"><div class="skeleton" style="height:18px; width:60%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>`).join('');
 
-    // --- Core Data Fetching (Optimized Database Reads) ---
+    // --- 1. Background Feed Fetching ---
     async function fetchUsers(isNewFetch = false, searchEmail = null) {
       if (isFetching || (!hasMoreDocs && !isNewFetch && !searchEmail)) return;
       isFetching = true;
@@ -256,70 +324,42 @@
         emptyState.classList.remove('active');
         lastVisibleDoc = null;
         hasMoreDocs = true;
-      } else {
-        loadingMore.classList.add('active');
-      }
+      } else { loadingMore.classList.add('active'); }
 
       try {
         let q;
         if (searchEmail) {
-          // Exact Match Search (1 Read Max)
           q = query(collection(db, "users"), where("email", "==", searchEmail.toLowerCase()), limit(1));
-          isSearching = true;
-          hasMoreDocs = false; 
+          isSearching = true; hasMoreDocs = false; 
         } else {
-          // Standard Pagination (10 per scroll)
           isSearching = false;
-          if (isNewFetch) {
-            q = query(collection(db, "users"), orderBy("email"), limit(10));
-          } else {
-            q = query(collection(db, "users"), orderBy("email"), startAfter(lastVisibleDoc), limit(10));
-          }
+          q = isNewFetch ? query(collection(db, "users"), orderBy("email"), limit(10)) 
+                         : query(collection(db, "users"), orderBy("email"), startAfter(lastVisibleDoc), limit(10));
         }
 
         const snapshot = await getDocs(q);
-        
         if (isNewFetch) grid.innerHTML = '';
         loadingMore.classList.remove('active');
 
-        if (snapshot.empty && isNewFetch) {
-          emptyState.classList.add('active');
-          isFetching = false;
-          return;
-        }
-
-        if (!searchEmail && snapshot.docs.length < 10) {
-          hasMoreDocs = false;
-        } else if (!searchEmail) {
-          lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
-        }
+        if (snapshot.empty && isNewFetch) { emptyState.classList.add('active'); isFetching = false; return; }
+        if (!searchEmail && snapshot.docs.length < 10) hasMoreDocs = false;
+        else if (!searchEmail) lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
 
         snapshot.docs.forEach(docSnap => {
           const userData = docSnap.data();
           userData.id = docSnap.id;
           renderUserCard(userData);
         });
-
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        if (isNewFetch) {
-          grid.innerHTML = `<p style="color:var(--warning); text-align:center; padding:20px;">Failed to load users. Check database rules or indexes.</p>`;
-        }
-      } finally {
-        isFetching = false;
-        loadingMore.classList.remove('active');
-      }
+      } catch (error) { console.error(error); if(isNewFetch) grid.innerHTML = `<p style="color:var(--warning); text-align:center;">Failed to load users.</p>`; } 
+      finally { isFetching = false; loadingMore.classList.remove('active'); }
     }
 
-    // --- Card Rendering & Optimistic Targeting ---
     function renderUserCard(user) {
       const card = document.createElement('div');
       card.className = 'user-card';
-      // Set an exact ID on the card so we can update it later without reloading the page
-      card.id = `user-card-${user.id}`; 
+      card.id = `feed-card-${user.id}`; // Crucial for optimistic updates
       
-      const isAgent = user.agent === true;
-      const badgeHtml = isAgent 
+      const badgeHtml = user.agent 
         ? `<span class="badge badge-agent"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Agent</span>`
         : `<span class="badge badge-customer">Customer</span>`;
 
@@ -331,123 +371,173 @@
           <div id="badge-${user.id}">${badgeHtml}</div>
         </div>
       `;
-      
-      card.addEventListener('click', () => {
-        if (navigator.vibrate) navigator.vibrate(15);
-        openBottomSheet(user);
-      });
-      
+      card.addEventListener('click', () => { if(navigator.vibrate) navigator.vibrate(15); openEditSheet(user); });
       grid.appendChild(card);
     }
 
-    // --- Search Input Listener (Debounced) ---
+    // Input & Observers
     searchInput.addEventListener('input', (e) => {
       clearTimeout(debounceTimer);
       const val = e.target.value.trim();
-      
-      debounceTimer = setTimeout(() => {
-        if (val.length > 0) {
-          fetchUsers(true, val);
-        } else if (isSearching) {
-          // If search is cleared, reload the default feed
-          fetchUsers(true);
-        }
-      }, 500);
+      debounceTimer = setTimeout(() => { val.length > 0 ? fetchUsers(true, val) : (isSearching && fetchUsers(true)); }, 500);
     });
 
-    // --- Infinite Scroll Observer ---
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !isFetching && hasMoreDocs && !isSearching) {
-        fetchUsers(false);
-      }
-    }, { rootMargin: "100px" });
+    const observer = new IntersectionObserver((entries) => { if (entries[0].isIntersecting && !isFetching && hasMoreDocs && !isSearching) fetchUsers(false); }, { rootMargin: "100px" });
     observer.observe(sentinel);
 
-    // --- Bottom Sheet Modal Engine ---
-    function openBottomSheet(user) {
-      activeUser = user; // Cache user for saving
-      
+    // --- 2. Hardware Back Button Routing System ---
+    function pushModal(modalId) {
+      modalStack.push(modalId);
+      history.pushState({ modal: modalId }, '');
+    }
+
+    function closeTopModal() {
+      const top = modalStack.pop();
+      if (top === 'dialog') { modalDialog.classList.remove('active'); overlayDialog.classList.remove('active'); userToRemove = null; rowToRemove = null; }
+      else if (top === 'full') { modalFull.classList.remove('active'); overlayFull.classList.remove('active'); }
+      else if (top === 'edit') { modalEdit.classList.remove('active'); overlayEdit.classList.remove('active'); activeUserForEdit = null; }
+    }
+
+    window.addEventListener('popstate', () => { if (modalStack.length > 0) closeTopModal(); });
+
+    ['btn-close-edit', 'overlay-edit', 'btn-close-full', 'overlay-full', 'btn-dialog-cancel', 'overlay-dialog'].forEach(id => {
+      document.getElementById(id).addEventListener('click', () => { if(navigator.vibrate) navigator.vibrate(10); if(modalStack.length > 0) history.back(); });
+    });
+
+    // --- 3. Layer 1: Edit Bottom Sheet ---
+    function openEditSheet(user) {
+      activeUserForEdit = user;
       sheetAvatar.src = user.profilePic || defaultAvatar;
       sheetEmail.innerText = user.email || 'No email recorded';
       sheetName.value = user.name || '';
       sheetAgentToggle.checked = user.agent === true;
+      sheetAgentToggle.onchange = () => { if (navigator.vibrate) navigator.vibrate(10); };
 
-      // Haptic toggle feedback
-      sheetAgentToggle.onchange = () => {
-        if (navigator.vibrate) navigator.vibrate(10);
-      };
-
-      modalBg.classList.add('active');
-      bottomSheet.classList.add('active');
-      isModalOpen = true;
-      history.pushState({ modal: 'agent_edit' }, '');
+      overlayEdit.classList.add('active');
+      modalEdit.classList.add('active');
+      pushModal('edit');
     }
 
-    function closeSheetLogic() {
-      modalBg.classList.remove('active');
-      bottomSheet.classList.remove('active');
-      isModalOpen = false;
-      activeUser = null;
-    }
-
-    // --- Saving & Optimistic UI Update ---
     btnSave.addEventListener('click', async () => {
-      if (!activeUser) return;
+      if (!activeUserForEdit) return;
       if (navigator.vibrate) navigator.vibrate(20);
-
       const newName = sheetName.value.trim();
       const isAgent = sheetAgentToggle.checked;
-
-      // UI Loading State
-      const originalBtnText = btnSave.innerHTML;
+      const originalText = btnSave.innerHTML;
       btnSave.innerHTML = `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke-opacity="0.3"></circle><path d="M12 2v4"></path></svg> Saving...`;
       btnSave.disabled = true;
 
       try {
-        // 1. Update Firestore (Only 1 Write operation)
-        await updateDoc(doc(db, 'users', activeUser.id), {
-          name: newName,
-          agent: isAgent,
-          updatedAt: new Date().toISOString()
-        });
-
-        if (navigator.vibrate) navigator.vibrate([20, 30, 20]); // Happy success double tap
-
-        // 2. Optimistic UI Update (Zero reads required!)
-        // Directly target the elements inside the specific card in the grid
-        const nameEl = document.getElementById(`name-${activeUser.id}`);
-        const badgeContainer = document.getElementById(`badge-${activeUser.id}`);
+        await updateDoc(doc(db, 'users', activeUserForEdit.id), { name: newName, agent: isAgent, updatedAt: new Date().toISOString() });
+        if (navigator.vibrate) navigator.vibrate([20, 30, 20]); 
         
-        if (nameEl) nameEl.innerText = newName || 'Unknown User';
-        if (badgeContainer) {
-          badgeContainer.innerHTML = isAgent 
+        // Optimistic UI Background Update
+        const nameEl = document.getElementById(`name-${activeUserForEdit.id}`);
+        const badgeEl = document.getElementById(`badge-${activeUserForEdit.id}`);
+        if(nameEl) nameEl.innerText = newName || 'Unknown User';
+        if(badgeEl) {
+          badgeEl.innerHTML = isAgent 
             ? `<span class="badge badge-agent"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Agent</span>`
             : `<span class="badge badge-customer">Customer</span>`;
         }
-
-        // Close Modal
-        history.back();
-
-      } catch (error) {
-        console.error("Failed to update user:", error);
-        if (navigator.vibrate) navigator.vibrate([50, 100, 50]); // Error vibration
-        alert("Failed to save changes. Please try again.");
-      } finally {
-        btnSave.innerHTML = originalBtnText;
-        btnSave.disabled = false;
-      }
+        history.back(); // Close modal safely
+      } catch (e) { if(navigator.vibrate) navigator.vibrate([50,100,50]); alert("Failed to save changes."); } 
+      finally { btnSave.innerHTML = originalText; btnSave.disabled = false; }
     });
 
-    // --- Hardware Back Button Support ---
-    window.addEventListener('popstate', (e) => {
-      if (isModalOpen) closeSheetLogic();
+    // --- 4. Layer 2: Manage Agents Full Screen Modal ---
+    document.getElementById('btn-open-agents').addEventListener('click', () => {
+      if(navigator.vibrate) navigator.vibrate(15);
+      lastAgentDoc = null;
+      hasMoreAgentsList = true;
+      agentListContainer.innerHTML = '';
+      fetchAgentsList(true);
+      overlayFull.classList.add('active');
+      modalFull.classList.add('active');
+      pushModal('full');
     });
 
-    [btnClose, modalBg].forEach(el => {
-      el.addEventListener('click', () => {
-        if (navigator.vibrate) navigator.vibrate(10);
-        if (isModalOpen) history.back();
-      });
+    async function fetchAgentsList(isNew = false) {
+      if (isFetchingAgentsList || (!hasMoreAgentsList && !isNew)) return;
+      isFetchingAgentsList = true;
+      loadingAgents.classList.add('active');
+
+      try {
+        const q = isNew ? query(collection(db, "users"), where("agent", "==", true), limit(15))
+                        : query(collection(db, "users"), where("agent", "==", true), startAfter(lastAgentDoc), limit(15));
+        
+        const snap = await getDocs(q);
+        loadingAgents.classList.remove('active');
+
+        if(snap.empty && isNew) { agentListContainer.innerHTML = `<p style="text-align:center; color:var(--text-sub); margin-top:40px;">No active agents found.</p>`; isFetchingAgentsList = false; return; }
+        if(snap.docs.length < 15) hasMoreAgentsList = false;
+        else lastAgentDoc = snap.docs[snap.docs.length - 1];
+
+        snap.docs.forEach(docSnap => {
+          const u = docSnap.data(); u.id = docSnap.id;
+          
+          const row = document.createElement('div');
+          row.className = 'agent-row';
+          row.innerHTML = `
+            <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+              <img src="${u.profilePic || defaultAvatar}" class="u-avatar" style="width:44px; height:44px; border:none;" onerror="this.src='${defaultAvatar}'">
+              <div style="flex:1; min-width:0;">
+                <div class="u-name" style="font-size:15px;">${u.name || 'Agent'}</div>
+                <div class="u-email" style="margin-bottom:0;">${u.email}</div>
+              </div>
+            </div>
+            <button class="btn-remove">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              Remove
+            </button>
+          `;
+          
+          row.querySelector('.btn-remove').addEventListener('click', () => {
+            if(navigator.vibrate) navigator.vibrate(20);
+            openConfirmDialog(u, row);
+          });
+          agentListContainer.appendChild(row);
+        });
+      } catch(e) { console.error(e); loadingAgents.classList.remove('active'); }
+      isFetchingAgentsList = false;
+    }
+
+    const agentObserver = new IntersectionObserver((entries) => { if(entries[0].isIntersecting && !isFetchingAgentsList && hasMoreAgentsList) fetchAgentsList(false); }, { rootMargin: "50px" });
+    agentObserver.observe(sentinelAgents);
+
+    // --- 5. Layer 3: Remove Confirmation Dialog ---
+    function openConfirmDialog(user, rowElement) {
+      userToRemove = user;
+      rowToRemove = rowElement;
+      overlayDialog.classList.add('active');
+      modalDialog.classList.add('active');
+      pushModal('dialog');
+    }
+
+    btnConfirm.addEventListener('click', async () => {
+      if(!userToRemove || !rowToRemove) return;
+      if(navigator.vibrate) navigator.vibrate([30, 50, 30]); // Warning vibration
+      
+      const originalText = btnConfirm.innerHTML;
+      btnConfirm.innerHTML = 'Removing...';
+      btnConfirm.disabled = true;
+
+      try {
+        await updateDoc(doc(db, 'users', userToRemove.id), { agent: false, updatedAt: new Date().toISOString() });
+        
+        // 1. Remove from Modal UI instantly
+        rowToRemove.style.opacity = '0';
+        rowToRemove.style.transform = 'scale(0.95)';
+        setTimeout(() => rowToRemove.remove(), 200);
+
+        // 2. Cross-UI Optimistic Update (Update main background feed if visible)
+        const badgeEl = document.getElementById(`badge-${userToRemove.id}`);
+        if(badgeEl) badgeEl.innerHTML = `<span class="badge badge-customer">Customer</span>`;
+
+        if(navigator.vibrate) navigator.vibrate(20);
+        history.back(); // Closes dialog
+      } catch(e) { if(navigator.vibrate) navigator.vibrate([50,100,50]); alert("Failed to remove agent."); }
+      finally { btnConfirm.innerHTML = originalText; btnConfirm.disabled = false; }
     });
 
   </script>
