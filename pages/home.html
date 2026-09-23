@@ -124,12 +124,14 @@
     .detail-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
     .detail-row.total { font-weight: 800; font-size: 16px; color: var(--primary); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
 
-    .agent-card { background: var(--surface-color); border: 1.5px solid var(--border); padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease; user-select: none; }
+    /* Agent Card Refined with Overflow Prevention */
+    .agent-card { background: var(--surface-color); border: 1.5px solid var(--border); padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease; user-select: none; overflow: hidden; }
     .agent-card:active { transform: scale(0.96); background: var(--bg-color); }
-    .agent-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--skeleton-base); object-fit: cover; }
-    .agent-info { flex: 1; }
-    .agent-name { font-weight: 800; font-size: 16px; margin-bottom: 4px; }
-    .agent-role { font-size: 13px; color: var(--text-sub); font-weight: 600; }
+    .agent-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--bg-color); object-fit: cover; flex-shrink: 0; }
+    .agent-info { flex: 1; min-width: 0; overflow: hidden; }
+    .agent-name { font-weight: 800; font-size: 16px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .agent-role { font-size: 13px; color: var(--text-sub); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
     .btn-assign { background: var(--st-assigned-bg); color: var(--st-assigned); width: 100%; margin-top: 16px; transition: transform 0.15s, opacity 0.2s; }
     .btn-assign:active { transform: scale(0.97); opacity: 0.8; }
 
@@ -176,11 +178,17 @@
   <!-- Layer 2: Agent Assignment Modal -->
   <div class="modal-overlay" id="overlay-l2" style="z-index: 1999;"></div>
   <div class="action-modal" id="modal-l2">
-    <div class="modal-header" style="border-radius: 24px 24px 0 0;">
-      <div class="modal-title">Select Delivery Agent</div>
-      <button class="btn-close" id="close-l2">
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-      </button>
+    <div class="modal-header" style="border-radius: 24px 24px 0 0; flex-direction: column; align-items: stretch; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="modal-title">Select Delivery Agent</div>
+        <button class="btn-close" id="close-l2">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div class="search-wrap">
+        <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+        <input type="email" id="agent-search-input" class="search-input" value="@gmail.com" placeholder="Search exact email...">
+      </div>
     </div>
     <div class="modal-scroll">
       <div id="m2-content"></div>
@@ -199,6 +207,9 @@
 
     const RENDER_API_URL = 'https://backend-ayvz.onrender.com/api/approve-zoho-order';
     
+    // Default Professional SVG Avatar
+    const agentAvatarSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23999999'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+
     // UI Elements
     const datePicker = document.getElementById('date-picker');
     const searchInput = document.getElementById('search-input');
@@ -214,6 +225,7 @@
     const modalL2 = document.getElementById('modal-l2');
     const overlayL2 = document.getElementById('overlay-l2');
     const m2Content = document.getElementById('m2-content');
+    const agentSearchInput = document.getElementById('agent-search-input');
     const loadingAgents = document.getElementById('loading-agents');
     const agentSentinel = document.getElementById('agent-sentinel');
 
@@ -228,6 +240,8 @@
     let lastAgentDoc = null;
     let isFetchingAgents = false;
     let hasMoreAgents = true;
+    let isSearchingAgents = false;
+    let agentSearchDebounce;
 
     datePicker.value = new Date().toISOString().split('T')[0];
 
@@ -265,7 +279,7 @@
 
     // --- REAL-TIME Order Fetching (Optimized with unsubscription) ---
     function fetchOrdersByDate(dateString) {
-      if (unsubscribeFeed) unsubscribeFeed(); // Kill old listener to prevent memory leaks/duplicate reads
+      if (unsubscribeFeed) unsubscribeFeed();
 
       grid.innerHTML = generateSkeletons(6);
       emptyState.classList.remove('active');
@@ -274,7 +288,6 @@
       
       const q = query(collection(db, "orders"), where("createdAt", ">=", start.toISOString()), where("createdAt", "<=", end.toISOString()), orderBy("createdAt", "desc"));
       
-      // Real-time Snapshot
       unsubscribeFeed = onSnapshot(q, (snapshot) => {
         renderFeed(snapshot);
       }, (error) => {
@@ -284,14 +297,11 @@
     }
 
     function fetchSingleOrder(orderId) {
-      if (unsubscribeFeed) unsubscribeFeed(); // Kill date listener while searching
-      
+      if (unsubscribeFeed) unsubscribeFeed();
       grid.innerHTML = generateSkeletons(1);
       emptyState.classList.remove('active');
       
       const docRef = doc(db, "orders", orderId);
-      
-      // Real-time single document Snapshot
       unsubscribeFeed = onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
           renderFeed({ empty: false, docs: [docSnap] });
@@ -317,7 +327,6 @@
         const totalQty = order.items.reduce((sum, i) => sum + (i.qty || 1), 0);
         const theme = getStatusTheme(order.status);
         
-        // Dynamic Bill Indicator
         const billedBadge = order.zoho_invoice_id 
           ? `<span class="badge-billed" title="Zoho Invoice ID: ${order.zoho_invoice_id}"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg> Billed</span>` 
           : '';
@@ -373,6 +382,7 @@
       if (navigator.vibrate) navigator.vibrate(15);
       lastAgentDoc = null;
       hasMoreAgents = true;
+      agentSearchInput.value = "@gmail.com"; // Reset search UX
       m2Content.innerHTML = '';
       fetchAgents(true);
       
@@ -411,9 +421,9 @@
       let agentHtml = order.agentId 
         ? `<div class="db-title" style="margin-top:20px;">Assigned Agent</div>
            <div class="agent-card" style="margin-top:0;" onclick="openLayer2()">
-             <img src="${order.agentImg || 'default.png'}" class="agent-avatar">
-             <div class="agent-info"><div class="agent-name">${order.agentName}</div><div class="agent-role">Delivery Partner</div></div>
-             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg>
+             <img src="${agentAvatarSvg}" class="agent-avatar">
+             <div class="agent-info"><div class="agent-name">${order.agentName}</div><div class="agent-role">Assigned Partner</div></div>
+             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg>
            </div>`
         : (!isRejected ? `<button class="btn btn-assign" onclick="openLayer2()">+ Assign Delivery Agent</button>` : '');
 
@@ -450,7 +460,6 @@
       const subTotal = order.subTotal !== undefined ? order.subTotal : calcSubTotal;
       const fee = order.deliveryFee || 0;
 
-      // Dynamic Bill Status in Summary
       const billStatusHtml = order.zoho_invoice_id 
         ? `<span style="color:var(--st-delivered); font-weight:800; display:flex; align-items:center; gap:4px;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg> Generated</span>`
         : `<span style="color:var(--text-sub); font-weight:600;">Pending</span>`;
@@ -475,7 +484,6 @@
         <button class="btn btn-delete" id="btn-delete"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg></button>
       `;
 
-      // Status Picker Listener (Time Tracking Included)
       document.getElementById('status-picker').addEventListener('change', async (e) => {
         if (navigator.vibrate) navigator.vibrate(15);
         const newStatus = e.target.value;
@@ -489,7 +497,6 @@
         refreshCurrentOrder();
       });
 
-      // Reject Button Listener (Time Tracking Included)
       document.getElementById('btn-reject').addEventListener('click', async () => {
         if (navigator.vibrate) navigator.vibrate(20);
         if(confirm('Are you sure you want to reject this order?')) {
@@ -509,7 +516,7 @@
         if(confirm('DANGER: Permanently delete this order document?')) {
           if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
           await deleteDoc(doc(db, 'orders', order.id));
-          history.back(); // Closes modal; the onSnapshot grid listener handles the rest instantly
+          history.back(); 
         }
       });
 
@@ -527,10 +534,10 @@
           });
           const data = await res.json();
           if(data.success) {
-            if (navigator.vibrate) navigator.vibrate([20, 30, 20]); // Happy success
+            if (navigator.vibrate) navigator.vibrate([20, 30, 20]); 
             refreshCurrentOrder();
           } else { 
-            if (navigator.vibrate) navigator.vibrate([50, 100, 50]); // Error
+            if (navigator.vibrate) navigator.vibrate([50, 100, 50]); 
             alert(data.error || 'Failed to sync'); 
             btn.innerHTML = 'Approve & Sync'; 
             btn.style.pointerEvents = 'auto'; 
@@ -544,48 +551,82 @@
       });
     }
 
-    // --- Layer 2 Agent Pagination Engine ---
-    async function fetchAgents(isNew = false) {
-      if (isFetchingAgents || (!hasMoreAgents && !isNew)) return;
+    // --- Layer 2 Agent Pagination Engine (With Search UX) ---
+    
+    // Auto-focus cursor trick
+    agentSearchInput.addEventListener('focus', function() {
+      if(this.value === '@gmail.com') setTimeout(() => this.setSelectionRange(0, 0), 10);
+    });
+
+    agentSearchInput.addEventListener('input', (e) => {
+      clearTimeout(agentSearchDebounce);
+      const val = e.target.value.trim();
+      agentSearchDebounce = setTimeout(() => {
+        if (val.length > 0 && val !== "@gmail.com") {
+          fetchAgents(true, val);
+        } else {
+          fetchAgents(true);
+        }
+      }, 500);
+    });
+
+    async function fetchAgents(isNew = false, searchEmail = null) {
+      if (isFetchingAgents || (!hasMoreAgents && !isNew && !searchEmail)) return;
       isFetchingAgents = true;
+      
+      if (isNew) {
+        m2Content.innerHTML = '';
+        lastAgentDoc = null;
+        hasMoreAgents = true;
+      }
       loadingAgents.classList.add('active');
 
       try {
         let q;
-        if (isNew) {
-          q = query(collection(db, "users"), where("agent", "==", true), limit(10));
+        if (searchEmail) {
+          q = query(collection(db, "users"), where("agent", "==", true), where("email", "==", searchEmail.toLowerCase()), limit(1));
+          isSearchingAgents = true;
+          hasMoreAgents = false;
         } else {
-          q = query(collection(db, "users"), where("agent", "==", true), startAfter(lastAgentDoc), limit(10));
+          isSearchingAgents = false;
+          if (isNew) {
+            q = query(collection(db, "users"), where("agent", "==", true), limit(10));
+          } else {
+            q = query(collection(db, "users"), where("agent", "==", true), startAfter(lastAgentDoc), limit(10));
+          }
         }
 
         const snap = await getDocs(q);
         loadingAgents.classList.remove('active');
 
         if (snap.empty && isNew) {
-          m2Content.innerHTML = `<div style="text-align:center; padding:20px;">No agents found.</div>`;
+          m2Content.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-sub); font-weight:600;">No active agents found.</div>`;
           isFetchingAgents = false;
           return;
         }
 
-        if (snap.docs.length < 10) hasMoreAgents = false;
-        else lastAgentDoc = snap.docs[snap.docs.length - 1];
+        if (!searchEmail && snap.docs.length < 10) hasMoreAgents = false;
+        else if (!searchEmail) lastAgentDoc = snap.docs[snap.docs.length - 1];
 
         snap.docs.forEach(docSnap => {
           const agent = docSnap.data();
           const card = document.createElement('div');
           card.className = 'agent-card';
+          // Render SVG avatar & display Email instead of UID
           card.innerHTML = `
-            <img src="${agent.profilePic || 'default.png'}" class="agent-avatar">
-            <div class="agent-info"><div class="agent-name">${agent.name || 'Agent'}</div><div class="agent-role">${docSnap.id}</div></div>
+            <img src="${agentAvatarSvg}" class="agent-avatar">
+            <div class="agent-info">
+              <div class="agent-name">${agent.name || 'Agent'}</div>
+              <div class="agent-role">${agent.email || 'No email'}</div>
+            </div>
           `;
           card.addEventListener('click', async () => {
             if (navigator.vibrate) navigator.vibrate([20, 40, 20]); // Happy assign vibe
-            // Auto-Assign and Time Tracking Integration
             const now = new Date().toISOString();
+            
             await updateDoc(doc(db, 'orders', activeOrderData.id), {
               agentId: docSnap.id,
               agentName: agent.name || 'Agent',
-              agentImg: agent.profilePic || '',
               status: 'assigned',
               assignedAt: now,
               updatedAt: now
@@ -601,7 +642,7 @@
     }
 
     const agentObserver = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !isFetchingAgents && hasMoreAgents) fetchAgents(false);
+      if (entries[0].isIntersecting && !isFetchingAgents && hasMoreAgents && !isSearchingAgents) fetchAgents(false);
     }, { rootMargin: "50px" });
     agentObserver.observe(agentSentinel);
 
