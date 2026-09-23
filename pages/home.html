@@ -58,12 +58,16 @@
     .orders-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
     @media (min-width: 768px) { .orders-grid { grid-template-columns: repeat(2, 1fr); } }
 
-    .order-card { background: var(--surface-color); border-radius: 16px; padding: 16px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.1s; }
+    .order-card { background: var(--surface-color); border-radius: 16px; padding: 16px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.1s; animation: fadeIn 0.3s ease; }
     .order-card:active { transform: scale(0.98); }
-    .oc-header { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-    .oc-id { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .oc-header { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); align-items: flex-start; }
+    .oc-id-wrap { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+    .oc-id { font-size: 15px; font-weight: 800; }
+    .badge-billed { font-size: 11px; background: var(--st-delivered-bg); color: var(--st-delivered); padding: 2px 8px; border-radius: 6px; font-weight: 800; border: 1px solid var(--st-delivered); display: inline-flex; align-items: center; gap: 4px; }
     .oc-time { font-size: 13px; color: var(--text-sub); }
-    .status-pill { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 50px; text-transform: capitalize; }
+    .status-pill { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 50px; text-transform: capitalize; white-space: nowrap; }
     
     .oc-body { display: flex; justify-content: space-between; align-items: center; }
     .img-stack { display: flex; align-items: center; }
@@ -181,7 +185,7 @@
 
   <script type="module">
     import { auth, db } from '../config.js';
-    import { collection, query, where, orderBy, limit, startAfter, getDocs, getDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, query, where, orderBy, limit, startAfter, onSnapshot, getDocs, getDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const RENDER_API_URL = 'https://backend-ayvz.onrender.com/api/approve-zoho-order';
@@ -209,7 +213,9 @@
     let activeOrderData = null;
     let modalStack = [];
     let debounceTimer;
-
+    
+    // Real-Time & Optimization State
+    let unsubscribeFeed = null;
     let lastAgentDoc = null;
     let isFetchingAgents = false;
     let hasMoreAgents = true;
@@ -248,31 +254,48 @@
     const formatDate = (isoStr) => new Date(isoStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute:'2-digit' });
     const generateSkeletons = (count = 4) => Array(count).fill(`<div class="order-card"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>`).join('');
 
-    // --- Order Fetching ---
-    async function fetchOrdersByDate(dateString) {
+    // --- REAL-TIME Order Fetching (Optimized with unsubscription) ---
+    function fetchOrdersByDate(dateString) {
+      if (unsubscribeFeed) unsubscribeFeed(); // Kill old listener to prevent memory leaks/duplicate reads
+
       grid.innerHTML = generateSkeletons(6);
       emptyState.classList.remove('active');
       const start = new Date(dateString); start.setHours(0,0,0,0);
       const end = new Date(dateString); end.setHours(23,59,59,999);
-      try {
-        const q = query(collection(db, "orders"), where("createdAt", ">=", start.toISOString()), where("createdAt", "<=", end.toISOString()), orderBy("createdAt", "desc"));
-        renderFeed(await getDocs(q));
-      } catch (e) { console.error(e); grid.innerHTML = '<p style="color:red">Error fetching orders.</p>'; }
+      
+      const q = query(collection(db, "orders"), where("createdAt", ">=", start.toISOString()), where("createdAt", "<=", end.toISOString()), orderBy("createdAt", "desc"));
+      
+      // Real-time Snapshot
+      unsubscribeFeed = onSnapshot(q, (snapshot) => {
+        renderFeed(snapshot);
+      }, (error) => {
+        console.error("Snapshot error:", error);
+        grid.innerHTML = '<p style="color:var(--st-rejected); padding:20px; text-align:center;">Real-time connection lost. Check database rules.</p>';
+      });
     }
 
-    async function fetchSingleOrder(orderId) {
+    function fetchSingleOrder(orderId) {
+      if (unsubscribeFeed) unsubscribeFeed(); // Kill date listener while searching
+      
       grid.innerHTML = generateSkeletons(1);
       emptyState.classList.remove('active');
-      try {
-        const docSnap = await getDoc(doc(db, "orders", orderId));
-        if (docSnap.exists()) renderFeed({ docs: [docSnap], empty: false });
-        else renderFeed({ empty: true });
-      } catch (e) { console.error(e); }
+      
+      const docRef = doc(db, "orders", orderId);
+      
+      // Real-time single document Snapshot
+      unsubscribeFeed = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          renderFeed({ empty: false, docs: [docSnap] });
+        } else {
+          renderFeed({ empty: true });
+        }
+      }, (error) => { console.error(error); });
     }
 
     function renderFeed(snapshot) {
       grid.innerHTML = '';
       if (snapshot.empty) return emptyState.classList.add('active');
+      emptyState.classList.remove('active');
 
       snapshot.docs.forEach(docSnap => {
         const order = docSnap.data();
@@ -284,13 +307,18 @@
 
         const totalQty = order.items.reduce((sum, i) => sum + (i.qty || 1), 0);
         const theme = getStatusTheme(order.status);
+        
+        // Dynamic Bill Indicator
+        const billedBadge = order.zoho_invoice_id 
+          ? `<span class="badge-billed" title="Zoho Invoice ID: ${order.zoho_invoice_id}"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg> Billed</span>` 
+          : '';
 
         const card = document.createElement('div');
         card.className = 'order-card';
         card.innerHTML = `
           <div class="oc-header">
             <div>
-              <div class="oc-id">${order.id}</div>
+              <div class="oc-id-wrap"><span class="oc-id">${order.id}</span> ${billedBadge}</div>
               <div class="oc-time">${formatDate(order.createdAt)}</div>
             </div>
             <div class="status-pill" style="background:var(--${theme}-bg); color:var(--${theme})">${order.status || 'Processing'}</div>
@@ -403,6 +431,11 @@
       const subTotal = order.subTotal !== undefined ? order.subTotal : calcSubTotal;
       const fee = order.deliveryFee || 0;
 
+      // Dynamic Bill Status in Summary
+      const billStatusHtml = order.zoho_invoice_id 
+        ? `<span style="color:var(--st-delivered); font-weight:800; display:flex; align-items:center; gap:4px;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg> Generated</span>`
+        : `<span style="color:var(--text-sub); font-weight:600;">Pending</span>`;
+
       m1Content.innerHTML = `
         <div class="detail-block"><div class="db-title">Order Status</div>${selectHtml}${agentHtml}</div>
         <div class="detail-block"><div class="db-title">Items Ordered</div>${itemsHtml}</div>
@@ -410,6 +443,7 @@
         <div class="detail-block">
           <div class="db-title">Payment Summary</div>
           <div class="detail-row"><span>Method</span><b>${order.paymentMethod || 'COD'}</b></div>
+          <div class="detail-row"><span>Zoho ERP</span>${billStatusHtml}</div>
           <div class="detail-row"><span>Subtotal</span><span>₹${subTotal.toLocaleString('en-IN')}</span></div>
           <div class="detail-row"><span>Delivery Fee</span><span style="color:${fee === 0 ? 'var(--st-delivered)' : 'inherit'}; font-weight:${fee === 0 ? '700' : 'normal'};">${fee === 0 ? 'FREE' : '₹' + fee}</span></div>
           <div class="detail-row total"><span>Total</span><span>₹${order.totalAmount.toLocaleString('en-IN')}</span></div>
@@ -451,7 +485,7 @@
       document.getElementById('btn-delete').addEventListener('click', async () => {
         if(confirm('DANGER: Permanently delete this order document?')) {
           await deleteDoc(doc(db, 'orders', order.id));
-          history.back(); fetchOrdersByDate(datePicker.value);
+          history.back(); // Closes modal; the onSnapshot grid listener handles the rest instantly
         }
       });
 
@@ -533,6 +567,7 @@
     }, { rootMargin: "50px" });
     agentObserver.observe(agentSentinel);
 
+    // Explicit Modal Refresher
     async function refreshCurrentOrder() {
       if(!activeOrderData) return;
       const docSnap = await getDoc(doc(db, 'orders', activeOrderData.id));
@@ -540,7 +575,6 @@
         activeOrderData = docSnap.data();
         activeOrderData.id = docSnap.id;
         renderLayer1(activeOrderData);
-        if(!searchInput.value) fetchOrdersByDate(datePicker.value);
       }
     }
   </script>
