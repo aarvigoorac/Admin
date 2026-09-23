@@ -88,7 +88,7 @@
     .empty-state svg { width: 64px; height: 64px; color: var(--border); margin-bottom: 16px; }
     .empty-state h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     
-    .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+    .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important; background-size: 200% 100% !important; animation: shimmer 1.5s infinite !important; border-radius: 6px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
     /* Modals */
@@ -124,7 +124,6 @@
     .detail-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
     .detail-row.total { font-weight: 800; font-size: 16px; color: var(--primary); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
 
-    /* Agent Card Refined with Overflow Prevention */
     .agent-card { background: var(--surface-color); border: 1.5px solid var(--border); padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease; user-select: none; overflow: hidden; }
     .agent-card:active { transform: scale(0.96); background: var(--bg-color); }
     .agent-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--bg-color); object-fit: cover; flex-shrink: 0; }
@@ -152,8 +151,15 @@
       <input type="date" id="date-picker" class="date-picker">
     </div>
 
-    <!-- Feed -->
-    <div class="orders-grid" id="orders-grid"></div>
+    <!-- Feed with pre-rendered instant skeletons -->
+    <div class="orders-grid" id="orders-grid">
+      <div class="order-card" style="pointer-events:none;"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>
+      <div class="order-card" style="pointer-events:none;"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>
+      <div class="order-card" style="pointer-events:none;"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>
+      <div class="order-card" style="pointer-events:none;"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>
+      <div class="order-card" style="pointer-events:none;"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>
+      <div class="order-card" style="pointer-events:none;"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>
+    </div>
 
     <div class="empty-state" id="empty-state">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -275,7 +281,7 @@
     };
 
     const formatDate = (isoStr) => new Date(isoStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute:'2-digit' });
-    const generateSkeletons = (count = 4) => Array(count).fill(`<div class="order-card"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>`).join('');
+    const generateSkeletons = (count = 4) => Array(count).fill(`<div class="order-card" style="pointer-events:none;"><div class="skeleton" style="height:20px; width:40%; margin-bottom:12px;"></div><div class="skeleton" style="height:40px; width:100%;"></div></div>`).join('');
 
     // --- REAL-TIME Order Fetching (Optimized with unsubscription) ---
     function fetchOrdersByDate(dateString) {
