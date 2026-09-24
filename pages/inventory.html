@@ -71,9 +71,15 @@
     .inv-stock { background: var(--success-bg); color: var(--success); padding: 2px 8px; border-radius: 4px; font-size: 12px; border: 1px solid var(--success); }
     .inv-stock.low { background: var(--warning-bg); color: var(--warning); border-color: var(--warning); }
 
-    /* Skeletons */
+    /* Skeletons & Loading Indicators */
     .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important; background-size: 200% 100% !important; animation: shimmer 1.5s infinite !important; border-radius: 6px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .loading-more { display: none; text-align: center; padding: 20px 10px; color: var(--text-sub); font-size: 14px; font-weight: 600; width: 100%; align-items: center; justify-content: center; gap: 8px; }
+    .loading-more.active { display: flex; }
+    .loading-more svg { animation: spin 1s linear infinite; width: 20px; height: 20px; stroke: currentColor; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .sentinel { height: 20px; width: 100%; }
 
     /* Layer 2: Product Detail Modal (Hardware Back Supported) */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); z-index: 1999; }
@@ -138,10 +144,21 @@
       </div>
     </div>
 
-    <!-- Inventory Feed (Strict Limit 10, No Pagination) -->
+    <!-- Inventory Feed with Instant Skeletons for Zero Flicker -->
     <div class="inventory-list" id="inventory-list">
-      <!-- Skeletons load initially -->
+      <div class="inventory-item" style="pointer-events:none;"><div class="skeleton inv-img" style="border:none;"></div><div class="inv-info" style="gap:8px;"><div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>
+      <div class="inventory-item" style="pointer-events:none;"><div class="skeleton inv-img" style="border:none;"></div><div class="inv-info" style="gap:8px;"><div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>
+      <div class="inventory-item" style="pointer-events:none;"><div class="skeleton inv-img" style="border:none;"></div><div class="inv-info" style="gap:8px;"><div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>
+      <div class="inventory-item" style="pointer-events:none;"><div class="skeleton inv-img" style="border:none;"></div><div class="inv-info" style="gap:8px;"><div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>
+      <div class="inventory-item" style="pointer-events:none;"><div class="skeleton inv-img" style="border:none;"></div><div class="inv-info" style="gap:8px;"><div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>
     </div>
+    
+    <!-- Infinite Scroll Indicator -->
+    <div class="loading-more" id="loading-inventory">
+      <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4"/></svg>
+      Fetching more from ERP...
+    </div>
+    <div class="sentinel" id="inventory-sentinel"></div>
 
   </div>
 
@@ -209,7 +226,7 @@
 
   <script type="module">
     import { auth, db } from '../config.js';
-    import { collection, query, where, orderBy, limit, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, query, where, orderBy, limit, getDocs, doc, setDoc, startAfter } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     // ImgBB API Key
@@ -222,6 +239,8 @@
     const inventoryList = document.getElementById('inventory-list');
     const searchInput = document.getElementById('inventory-search-input');
     const clearSearchBtn = document.getElementById('clear-search-btn');
+    const loadingInventory = document.getElementById('loading-inventory');
+    const sentinelInventory = document.getElementById('inventory-sentinel');
 
     // Modal Elements
     const modalSheet = document.getElementById('modal-sheet');
@@ -245,8 +264,12 @@
     // Global State
     let isModalOpen = false;
     let currentSelectedProduct = null;
-    let isFetchingInventory = false;
     let searchDebounceTimer;
+    
+    // Pagination State
+    let isFetchingInventory = false;
+    let lastInventoryDoc = null;
+    let hasMoreInventory = true;
 
     const getProductImage = (prod) => {
       if (prod.images && prod.images.thumbnail) return prod.images.thumbnail;
@@ -267,8 +290,8 @@
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        inventoryList.innerHTML = generateSkeletons(5);
-        fetchInventory();
+        // Initial HTML already has skeletons, start fetching silently
+        fetchInventory(true, '');
       }
     });
 
@@ -281,7 +304,7 @@
       else clearSearchBtn.style.display = 'none';
 
       searchDebounceTimer = setTimeout(() => {
-        fetchInventory(val);
+        fetchInventory(true, val);
       }, 500); 
     });
 
@@ -289,34 +312,61 @@
       if (navigator.vibrate) navigator.vibrate(40);
       searchInput.value = '';
       clearSearchBtn.style.display = 'none';
-      fetchInventory('');
+      fetchInventory(true, '');
       searchInput.focus();
     });
 
-    // --- 2. Fetch Inventory Engine (Strict Limit 10, No Pagination) ---
-    async function fetchInventory(keyword = '') {
-      if (isFetchingInventory) return;
+    // --- 2. Fetch Inventory Engine (Restored Pagination) ---
+    async function fetchInventory(isNew = false, keyword = '') {
+      if (isFetchingInventory || (!hasMoreInventory && !isNew)) return;
       isFetchingInventory = true;
       
-      inventoryList.innerHTML = generateSkeletons(5);
+      if (isNew) {
+        if (keyword.length > 0 || inventoryList.children.length === 0 || !inventoryList.innerHTML.includes('skeleton')) {
+          inventoryList.innerHTML = generateSkeletons(5);
+        }
+        lastInventoryDoc = null;
+        hasMoreInventory = true;
+      } else {
+        loadingInventory.classList.add('active');
+      }
 
       try {
         let q;
         if (keyword.length > 0) {
           const searchWords = keyword.split(' ').filter(word => word.trim().length > 0);
           const queryConstraints = searchWords.map(word => where(`searchKeywords.${word}`, "==", true));
-          q = query(collection(db, "products"), ...queryConstraints, limit(10));
+          
+          if (isNew) {
+            q = query(collection(db, "products"), ...queryConstraints, limit(10));
+          } else {
+            q = query(collection(db, "products"), ...queryConstraints, startAfter(lastInventoryDoc), limit(10));
+          }
         } else {
-          q = query(collection(db, "products"), orderBy("name"), limit(10));
+          if (isNew) {
+            q = query(collection(db, "products"), orderBy("name"), limit(10));
+          } else {
+            q = query(collection(db, "products"), orderBy("name"), startAfter(lastInventoryDoc), limit(10));
+          }
         }
 
         const snap = await getDocs(q);
-        inventoryList.innerHTML = '';
+        
+        if (isNew) {
+          inventoryList.innerHTML = '';
+        }
+        loadingInventory.classList.remove('active');
 
-        if (snap.empty) {
+        if (snap.empty && isNew) {
           inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub); font-weight:600;">No items found in ERP sync.</div>`;
           isFetchingInventory = false;
           return;
+        }
+
+        if (snap.docs.length < 10) {
+          hasMoreInventory = false;
+        } else {
+          lastInventoryDoc = snap.docs[snap.docs.length - 1];
         }
 
         snap.docs.forEach(docSnap => {
@@ -350,12 +400,27 @@
 
       } catch (err) {
         console.error("Inventory fetch error:", err);
-        inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--warning); font-weight:600;">Error fetching data.</div>`;
+        loadingInventory.classList.remove('active');
+        if (isNew) {
+           inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--warning); font-weight:600;">Error fetching data.</div>`;
+        }
       }
       isFetchingInventory = false;
     }
 
-    // --- 3. Hardware Back Button Routing System ---
+    // --- 3. Intersection Observer for Infinite Scroll ---
+    const infiniteScrollObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !isFetchingInventory && hasMoreInventory) {
+        const val = searchInput.value.trim().toLowerCase().replace(/[\.\#\$\[\]]/g, '');
+        fetchInventory(false, val);
+      }
+    }, { rootMargin: "100px" });
+    
+    if (sentinelInventory) {
+       infiniteScrollObserver.observe(sentinelInventory);
+    }
+
+    // --- 4. Hardware Back Button Routing System ---
     function openProductModal(product) {
       currentSelectedProduct = product;
       
@@ -409,7 +474,7 @@
       if (isModalOpen) history.back();
     });
 
-    // --- 4. Description Save Engine ---
+    // --- 5. Description Save Engine ---
     btnSaveDesc.addEventListener('click', async () => {
       if (!currentSelectedProduct) return;
       if (navigator.vibrate) navigator.vibrate(15);
@@ -444,7 +509,7 @@
       }
     });
 
-    // --- 5. The Canvas Cropper & KB Compression Engine ---
+    // --- 6. The Canvas Cropper & KB Compression Engine ---
     btnUpload.addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(15);
       fileInput.click();
@@ -514,8 +579,9 @@
           btnUpload.classList.add('has-image');
           btnUpload.style = ''; 
           
-          // Silently refresh the list in background
-          fetchInventory(searchInput.value.trim().toLowerCase().replace(/[\.\#\$\[\]]/g, ''));
+          // Silently refresh the list in background so feed is updated when modal closes
+          const currentKeyword = searchInput.value.trim().toLowerCase().replace(/[\.\#\$\[\]]/g, '');
+          fetchInventory(true, currentKeyword);
           
           if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
 
