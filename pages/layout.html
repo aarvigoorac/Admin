@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Homepage Layout - Aarvi Stores</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Layout Command Center - Aarvi Stores</title>
   <style>
     :root {
       --bg-color: #f1f3f6;
       --surface-color: #ffffff;
+      --surface-rgb: 255, 255, 255;
       --text-main: #000000;
       --text-sub: #666666;
       --border: #e0e0e0;
@@ -24,6 +25,7 @@
       :root {
         --bg-color: #121212;
         --surface-color: #1e1e1e;
+        --surface-rgb: 30, 30, 30;
         --text-main: #ffffff;
         --text-sub: #a0a0a0;
         --border: #333333;
@@ -40,109 +42,129 @@
     ::-webkit-scrollbar { display: none; }
     html, body { -ms-overflow-style: none; scrollbar-width: none; background-color: var(--bg-color); color: var(--text-main); }
 
-    .page-container { width: 100%; max-width: 900px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
+    .page-container { width: 100%; max-width: 900px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 120px; }
+    .page-header { font-size: 26px; font-weight: 800; padding: 12px 0 0 0; color: var(--text-main); letter-spacing: -0.5px; }
 
-    .page-header { font-size: 22px; font-weight: 800; padding: 12px 0; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
-    .slot-count-badge { font-size: 13px; background: var(--surface-color); border: 1.5px solid var(--border); padding: 6px 12px; border-radius: 50px; color: var(--text-sub); font-weight: 700; }
+    /* Dashboard: Hero Section */
+    .hero-manager-card { background: linear-gradient(135deg, var(--surface-color), var(--bg-color)); border-radius: 20px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+    .hero-manager-card:active { transform: scale(0.97); }
+    .hero-manager-info { display: flex; flex-direction: column; gap: 6px; }
+    .hero-manager-title { font-size: 18px; font-weight: 800; color: var(--text-main); }
+    .hero-manager-desc { font-size: 14px; font-weight: 600; color: var(--text-sub); }
+    .hero-badge { background: rgba(40, 116, 240, 0.1); color: var(--primary); padding: 6px 14px; border-radius: 50px; font-size: 14px; font-weight: 800; border: 1px solid rgba(40, 116, 240, 0.2); }
 
-    /* 16 Slots Line-by-Line List Container */
-    .slots-list { display: flex; flex-direction: column; gap: 12px; }
+    /* Dashboard: Categories Section */
+    .section-header { font-size: 18px; font-weight: 800; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .categories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    
+    .cat-card { background: var(--surface-color); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.15s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .cat-card:active { transform: scale(0.96); }
+    .cat-img-wrap { width: 100%; aspect-ratio: 16/9; background: var(--bg-color); position: relative; border-bottom: 1px solid var(--border); }
+    .cat-img { width: 100%; height: 100%; object-fit: cover; }
+    .cat-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--border); }
+    .cat-placeholder svg { width: 40px; height: 40px; }
+    .cat-details { padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+    .cat-name { font-size: 15px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cat-meta { font-size: 12px; font-weight: 700; color: var(--text-sub); }
 
-    /* Slot Row Card */
-    .slot-card { background: var(--surface-color); border-radius: 16px; padding: 12px 16px; border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease; user-select: none; }
+    /* Floating Action Button */
+    .fab { position: fixed; bottom: 32px; right: 24px; width: 64px; height: 64px; border-radius: 32px; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 28px rgba(40, 116, 240, 0.4); border: none; cursor: pointer; transition: transform 0.2s; z-index: 100; }
+    .fab:active { transform: scale(0.9); }
+    .fab svg { width: 32px; height: 32px; stroke: currentColor; stroke-width: 2.5; }
+
+    /* Universal Full Screen Modal (For Hero & Category Managers) */
+    .fs-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 1500; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; }
+    .fs-modal.active { transform: translateY(0); }
+    
+    .fs-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: rgba(var(--surface-rgb), 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .fs-header-left { display: flex; align-items: center; gap: 12px; }
+    .btn-icon { background: var(--bg-color); border: none; color: var(--text-main); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; }
+    .btn-icon:active { transform: scale(0.9); }
+    .fs-title { font-size: 18px; font-weight: 800; }
+    
+    .btn-pill-action { background: var(--skeleton-base); color: var(--text-main); font-size: 14px; font-weight: 800; padding: 8px 16px; border-radius: 50px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .btn-pill-action:active { transform: scale(0.95); }
+
+    .fs-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
+
+    /* Slot Feed Rows (Reused for both 16 and 10 slot managers) */
+    .slot-card { background: var(--surface-color); border-radius: 16px; padding: 12px 16px; border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; user-select: none; }
     .slot-card:active { transform: scale(0.97); background: var(--bg-color); }
-
     .slot-number { font-size: 14px; font-weight: 800; color: var(--text-sub); width: 28px; text-align: center; flex-shrink: 0; background: var(--bg-color); padding: 4px; border-radius: 6px; border: 1px solid var(--border); }
-
-    /* Empty Slot State */
     .slot-card.empty { border: 2px dashed var(--border); background: transparent; }
-    .slot-card.empty:hover { border-color: var(--primary); }
-    .empty-content { display: flex; align-items: center; gap: 12px; width: 100%; color: var(--text-sub); }
     .empty-icon-box { width: 52px; height: 52px; border-radius: 12px; background: var(--surface-color); border: 1.5px dashed var(--border); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 24px; font-weight: 700; flex-shrink: 0; }
     .empty-text { font-size: 15px; font-weight: 700; color: var(--text-sub); }
-
-    /* Filled Slot Content */
     .slot-img { width: 52px; height: 52px; border-radius: 10px; background: var(--bg-color); object-fit: contain; flex-shrink: 0; border: 1px solid var(--border); padding: 4px; mix-blend-mode: multiply; }
     @media (prefers-color-scheme: dark) { .slot-img { mix-blend-mode: normal; } }
     .slot-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
     .slot-name { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
-    .slot-meta { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-sub); font-weight: 600; }
-    .slot-price { color: var(--primary); font-weight: 800; }
+    .slot-price { font-size: 13px; color: var(--primary); font-weight: 800; }
     .slot-action-hint { font-size: 12px; font-weight: 800; color: var(--primary); background: var(--bg-color); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
 
-    /* Strict Detailed Skeleton Loading */
-    .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important; background-size: 200% 100% !important; animation: shimmer 1.5s infinite !important; border-radius: 6px; }
+    /* Base Skeletons */
+    .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important; background-size: 200% 100% !important; animation: shimmer 1.5s infinite !important; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-    /* Layer 1: Slot Options Bottom Sheet */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); z-index: 1999; }
+    /* Overlay */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    
-    .bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-color); z-index: 2000; border-radius: 24px 24px 0 0; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); max-height: 80vh; }
-    .bottom-sheet.active { transform: translateY(0); }
-    
-    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; position: sticky; top: 0; z-index: 10; }
-    .btn-close { background: var(--bg-color); border: none; color: var(--text-main); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: transform 0.1s; }
-    .btn-close:active { transform: scale(0.9); }
-    .modal-title { font-size: 18px; font-weight: 800; }
-    .sheet-scroll { padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; padding-bottom: 40px; }
 
-    .sheet-product-preview { background: var(--surface-color); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; }
-    .sheet-product-img { width: 64px; height: 64px; border-radius: 12px; background: var(--bg-color); object-fit: contain; border: 1px solid var(--border); padding: 4px; flex-shrink: 0; mix-blend-mode: multiply;}
-    @media (prefers-color-scheme: dark) { .sheet-product-img { mix-blend-mode: normal; } }
+    /* Bottom Sheets */
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-color); border-radius: 24px 24px 0 0; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); max-height: 90vh; }
+    .bottom-sheet.active { transform: translateY(0); }
+    .sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; position: sticky; top: 0; z-index: 10; }
+    .sheet-title { font-size: 18px; font-weight: 800; }
+    .sheet-scroll { padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; padding-bottom: 40px; }
+
+    /* Category Settings Sheet specific */
+    .media-engine { display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--surface-color); padding: 20px; border-radius: 20px; border: 1px solid var(--border); }
+    .cat-preview-box { width: 120px; height: 120px; border-radius: 16px; background: var(--bg-color); border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+    .cat-preview-box img { width: 100%; height: 100%; object-fit: cover; }
+    .btn-upload-engine { width: 100%; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--primary); color: white; transition: transform 0.15s; }
+    .btn-upload-engine:active { transform: scale(0.96); }
+    .btn-upload-engine.has-image { background: var(--skeleton-base); color: var(--text-main); }
+    #hidden-cat-file { display: none; }
+
+    .modern-input-group { display: flex; flex-direction: column; gap: 8px; }
+    .modern-label { font-size: 13px; font-weight: 800; color: var(--text-sub); margin-left: 4px; }
+    .modern-input { width: 100%; padding: 16px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface-color); color: var(--text-main); font-size: 16px; font-weight: 600; outline: none; transition: border-color 0.2s; }
+    .modern-input:focus { border-color: var(--primary); }
+
+    .btn-master-save { width: 100%; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 800; border: none; background: var(--primary); color: white; cursor: pointer; box-shadow: 0 4px 16px rgba(40, 116, 240, 0.3); transition: transform 0.15s; }
+    .btn-master-save:active { transform: scale(0.97); }
     
-    .sheet-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .danger-zone { margin-top: 10px; padding-top: 20px; border-top: 1px solid var(--border); }
+    .btn-danger-ghost { width: 100%; padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 800; border: 1.5px solid var(--warning-bg); background: transparent; color: var(--warning); cursor: pointer; transition: transform 0.15s; }
+    .btn-danger-ghost:active { background: var(--warning-bg); transform: scale(0.97); }
+
+    /* Action Sheet (Slot Options) specific */
+    .sheet-product-preview { background: var(--surface-color); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; }
     .btn-sheet { width: 100%; padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.15s; }
     .btn-sheet:active { transform: scale(0.97); }
     .btn-change { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(40, 116, 240, 0.25); }
     .btn-remove { background: var(--warning-bg); color: var(--warning); border: 1.5px solid var(--warning); }
 
-    /* Layer 2: Inventory Search Modal (Full Screen) */
-    #overlay-search { z-index: 2499; }
-    .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2500; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; }
-    .full-modal.active { transform: translateY(0); }
+    /* Inventory Search Modal specific */
+    .search-wrap { padding: 16px; background: var(--surface-color); border-bottom: 1px solid var(--border); position: relative; }
+    .search-input-box { width: 100%; padding: 14px 16px 14px 44px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 15px; outline: none; }
+    .search-input-box:focus { border-color: var(--primary); background: var(--surface-color); }
+    .search-icon { position: absolute; left: 32px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; stroke: var(--text-sub); stroke-width: 2.5; }
     
-    .full-header { display: flex; flex-direction: column; background: var(--surface-color); border-bottom: 1px solid var(--border); padding: 16px; gap: 12px; }
-    .search-wrap { flex: 1; position: relative; width: 100%; display: flex; align-items: center; }
-    .search-wrap svg { position: absolute; left: 16px; width: 20px; height: 20px; stroke: var(--text-sub); stroke-width: 2.5; transition: stroke 0.3s ease; }
-    .search-input { width: 100%; padding: 14px 16px 14px 44px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 15px; outline: none; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
-    .search-input:focus { border-color: var(--primary); background: var(--surface-color); box-shadow: 0 0 0 4px rgba(40, 116, 240, 0.1); }
-    .search-input:focus + svg { stroke: var(--primary); }
-    .clear-btn { position: absolute; right: 16px; background: var(--skeleton-base); border: none; width: 24px; height: 24px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; color: var(--text-sub); }
-    .clear-btn svg { left: auto; position: static; width: 14px; height: 14px; stroke: currentColor; }
-
-    .full-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-
-    /* Enlarged Inventory Item Cards */
-    .inventory-item { background: var(--surface-color); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 20px; cursor: pointer; transition: transform 0.15s; user-select: none; }
-    .inventory-item:active { transform: scale(0.96); background: var(--bg-color); }
-    .inv-img { width: 80px; height: 80px; border-radius: 12px; background: var(--bg-color); object-fit: contain; border: 1px solid var(--border); padding: 6px; flex-shrink: 0; mix-blend-mode: multiply; }
+    .inventory-item { background: var(--surface-color); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; margin-bottom: 12px; }
+    .inv-img { width: 64px; height: 64px; border-radius: 12px; background: var(--bg-color); object-fit: contain; padding: 4px; mix-blend-mode: multiply; }
     @media (prefers-color-scheme: dark) { .inv-img { mix-blend-mode: normal; } }
-    .inv-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-    .inv-name { font-size: 16px; font-weight: 800; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
-    .inv-meta { font-size: 15px; font-weight: 800; color: var(--primary); display: flex; gap: 12px; }
     .btn-select { font-size: 13px; font-weight: 800; background: var(--success-bg); color: var(--success); border: 1px solid var(--success); padding: 8px 16px; border-radius: 8px; flex-shrink: 0; }
 
-    .loading-more { display: none; text-align: center; padding: 10px; color: var(--text-sub); font-size: 14px; font-weight: 600; width: 100%; align-items: center; justify-content: center; gap: 8px; }
-    .loading-more.active { display: flex; }
-    .loading-more svg { animation: spin 1s linear infinite; width: 20px; height: 20px; stroke: currentColor; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    .sentinel { height: 20px; width: 100%; }
-
-    /* Layer 3 Dynamic HTML Confirmation Dialog */
-    #overlay-dialog { z-index: 2999; }
+    /* Center Dialogs (For Delete Confirmations) */
     .dialog-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: var(--surface-color); z-index: 3000; border-radius: 20px; padding: 24px; width: 90%; max-width: 360px; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; text-align: center; }
     .dialog-box.active { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
-    
     .dialog-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; background: var(--warning-bg); color: var(--warning); }
     .dialog-icon svg { width: 28px; height: 28px; stroke: currentColor; stroke-width: 2.5; }
     .dialog-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: var(--text-main); }
     .dialog-desc { font-size: 14px; color: var(--text-sub); margin-bottom: 24px; line-height: 1.5; }
-    
     .dialog-actions { display: flex; width: 100%; gap: 12px; }
-    .btn-dialog { flex: 1; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; transition: transform 0.15s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .btn-dialog { flex: 1; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; transition: transform 0.15s; }
     .btn-dialog:active { transform: scale(0.95); }
-    .btn-dialog:disabled { opacity: 0.6; pointer-events: none; }
     .btn-dialog.cancel { background: var(--bg-color); color: var(--text-main); border: 1.5px solid var(--border); }
     .btn-dialog.confirm { background: var(--warning); color: white; box-shadow: 0 4px 12px rgba(179, 38, 30, 0.2); }
 
@@ -150,90 +172,154 @@
 </head>
 <body>
 
-  <div class="page-container">
-    <div class="page-header">
-      Homepage Layout
-      <span class="slot-count-badge" id="slot-counter">Loading...</span>
+  <!-- Level 0: The Dashboard Command Center -->
+  <div class="page-container" id="dashboard-view">
+    <div class="page-header">Layout Manager</div>
+    
+    <!-- Hero Trigger -->
+    <div class="hero-manager-card" id="btn-open-hero">
+      <div class="hero-manager-info">
+        <div class="hero-manager-title">Homepage Hero</div>
+        <div class="hero-manager-desc">Manage the top 16 scrolling slots</div>
+      </div>
+      <div class="hero-badge" id="dash-hero-badge">--/16</div>
     </div>
 
-    <!-- 16 Line-by-Line Slots Feed -->
-    <div class="slots-list" id="slots-list">
-      <!-- 0ms Hardcoded Skeletons exactly 16 times -->
-      <script>
-        document.write(Array(16).fill(`
-          <div class="slot-card" style="pointer-events:none;">
-            <div class="skeleton slot-number" style="height:28px; border:none;"></div>
-            <div class="skeleton" style="width:52px; height:52px; border-radius:10px; flex-shrink:0;"></div>
-            <div style="display:flex; flex-direction:column; gap:8px; flex:1;">
-              <div class="skeleton" style="height:16px; width:60%; border-radius:4px;"></div>
-              <div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div>
-            </div>
-            <div class="skeleton" style="width:60px; height:28px; border-radius:8px;"></div>
-          </div>
-        `).join(''));
-      </script>
+    <!-- Categories Grid -->
+    <div>
+      <div class="section-header">Categories</div>
+      <div class="categories-grid" id="dash-categories-grid">
+        <!-- Initial Dashboard Skeletons -->
+        <div class="cat-card" style="pointer-events:none;"><div class="skeleton cat-img-wrap" style="border:none;"></div><div class="cat-details"><div class="skeleton" style="height:16px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:12px; width:40%; border-radius:4px; margin-top:4px;"></div></div></div>
+        <div class="cat-card" style="pointer-events:none;"><div class="skeleton cat-img-wrap" style="border:none;"></div><div class="cat-details"><div class="skeleton" style="height:16px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:12px; width:40%; border-radius:4px; margin-top:4px;"></div></div></div>
+      </div>
     </div>
   </div>
 
-  <!-- Layer 1: Slot Options Bottom Sheet -->
-  <div class="modal-overlay" id="overlay-sheet"></div>
-  <div class="bottom-sheet" id="modal-sheet">
-    <div class="modal-header">
-      <div class="modal-title" id="sheet-title">Slot Options</div>
-      <button class="btn-close" id="btn-close-sheet">
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+  <!-- Global FAB to Create Category -->
+  <button class="fab" id="btn-fab-create-cat">
+    <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+  </button>
+
+  <!-- Level 1A: 16-Slot Manager (Full Screen) -->
+  <div class="fs-modal" id="modal-hero-manager" style="z-index: 1000;">
+    <div class="fs-header">
+      <div class="fs-header-left">
+        <button class="btn-icon" id="btn-close-hero"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg></button>
+        <div class="fs-title">Top 16 Slots</div>
+      </div>
+      <div class="hero-badge" id="hero-modal-badge" style="background:var(--surface-color); border-color:var(--border); color:var(--text-sub);">--/16</div>
+    </div>
+    <div class="fs-scroll">
+      <div class="slots-list" id="hero-slots-list"></div>
+    </div>
+  </div>
+
+  <!-- Level 1B: Category 10-Slot Manager (Full Screen) -->
+  <div class="fs-modal" id="modal-cat-manager" style="z-index: 1000;">
+    <div class="fs-header">
+      <div class="fs-header-left">
+        <button class="btn-icon" id="btn-close-cat"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg></button>
+        <div class="fs-title" id="cat-modal-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">Category</div>
+      </div>
+      <button class="btn-pill-action" id="btn-open-cat-settings">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        Edit
       </button>
     </div>
+    <div class="fs-scroll">
+      <div class="slots-list" id="cat-slots-list"></div>
+    </div>
+  </div>
+
+  <!-- Shared Overlays for Modals Layers 2 to 5 -->
+  <div class="modal-overlay" id="overlay-shared" style="z-index: 1999;"></div>
+
+  <!-- Level 2A: Category Settings (Bottom Sheet) -->
+  <div class="bottom-sheet" id="sheet-cat-settings" style="z-index: 2000;">
+    <div class="sheet-header">
+      <div class="sheet-title" id="cat-settings-title">Category Settings</div>
+      <button class="btn-icon" id="btn-close-cat-settings"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+    </div>
     <div class="sheet-scroll">
-      <div class="sheet-product-preview" id="sheet-preview">
-        <!-- Filled dynamically -->
+      
+      <!-- ImgBB Upload Engine -->
+      <div class="media-engine">
+        <div class="cat-preview-box">
+          <img id="cat-preview-img" src="" style="display:none;">
+          <div id="cat-placeholder-icon" style="color:var(--border);"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg></div>
+        </div>
+        <input type="file" id="hidden-cat-file" accept="image/jpeg, image/png, image/jpg, image/*">
+        <button class="btn-upload-engine" id="btn-upload-cat-img">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+          <span id="btn-upload-cat-text">Upload Image</span>
+        </button>
       </div>
-      <div class="sheet-actions">
-        <button class="btn-sheet btn-change" id="btn-sheet-change">Change Product</button>
-        <button class="btn-sheet btn-remove" id="btn-sheet-remove">Remove from Slot</button>
+
+      <div class="modern-input-group">
+        <div class="modern-label">Category Name</div>
+        <input type="text" id="cat-name-input" class="modern-input" placeholder="e.g., Summer Collection">
+      </div>
+
+      <button class="btn-master-save" id="btn-save-cat">Save Category</button>
+
+      <div class="danger-zone" id="cat-danger-zone" style="display:none;">
+        <button class="btn-danger-ghost" id="btn-req-delete-cat">Delete Category</button>
       </div>
     </div>
   </div>
 
-  <!-- Layer 2: Inventory Search Modal (Full Screen) -->
-  <div class="modal-overlay" id="overlay-search"></div>
-  <div class="full-modal" id="modal-search">
-    <div class="full-header">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div class="modal-title" id="search-modal-title">Select Product</div>
-        <button class="btn-close" id="btn-close-search">
-          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-        </button>
-      </div>
-      <div class="search-wrap">
-        <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-        <input type="text" id="inventory-search-input" class="search-input" placeholder="Search inventory keywords...">
-        <button class="clear-btn" id="clear-search-btn">
-          <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
+  <!-- Level 2B: Slot Options (Bottom Sheet) -->
+  <div class="bottom-sheet" id="sheet-slot-options" style="z-index: 2000;">
+    <div class="sheet-header">
+      <div class="sheet-title" id="slot-options-title">Slot Options</div>
+      <button class="btn-icon" id="btn-close-slot-options"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+    </div>
+    <div class="sheet-scroll">
+      <div class="sheet-product-preview" id="slot-preview-content"></div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="btn-sheet btn-change" id="btn-slot-change">Change Product</button>
+        <button class="btn-sheet btn-remove" id="btn-slot-remove">Clear Slot</button>
       </div>
     </div>
-    <div class="full-scroll" id="inventory-list">
-      <!-- Inventory rows injected here -->
-    </div>
-    <div class="loading-more" id="loading-inventory">
-      <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4"/></svg>
-      Loading inventory...
-    </div>
-    <div class="sentinel" id="inventory-sentinel"></div>
   </div>
 
-  <!-- Layer 3: Dynamic HTML Confirmation Dialog -->
-  <div class="modal-overlay" id="overlay-dialog"></div>
-  <div class="dialog-box" id="modal-dialog">
-    <div class="dialog-icon">
-      <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+  <!-- Level 3: Inventory Search Modal (Full Screen) -->
+  <div class="fs-modal" id="modal-search" style="z-index: 2100;">
+    <div class="fs-header" style="padding-bottom:12px;">
+      <div class="fs-header-left">
+        <button class="btn-icon" id="btn-close-search"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg></button>
+        <div class="fs-title" id="search-title">Select Product</div>
+      </div>
     </div>
+    <div class="search-wrap">
+      <svg class="search-icon" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+      <input type="text" id="inv-search-input" class="search-input-box" placeholder="Search inventory keywords...">
+    </div>
+    <div class="fs-scroll" id="inv-search-list" style="padding-top:0;"></div>
+  </div>
+
+  <!-- Level 4A: Dialog Confirm Clear Slot -->
+  <div class="modal-overlay" id="overlay-dialog-slot" style="z-index: 2999;"></div>
+  <div class="dialog-box" id="dialog-clear-slot" style="z-index: 3000;">
+    <div class="dialog-icon"><svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></div>
     <div class="dialog-title">Clear Slot?</div>
-    <div class="dialog-desc">Are you sure you want to remove this product from the homepage? This will immediately reflect on the customer app.</div>
+    <div class="dialog-desc">This product will be instantly removed from this slot in the live customer app.</div>
     <div class="dialog-actions">
-      <button class="btn-dialog cancel" id="btn-dialog-cancel">Cancel</button>
-      <button class="btn-dialog confirm" id="btn-dialog-confirm">Remove</button>
+      <button class="btn-dialog cancel" id="btn-cancel-clear-slot">Cancel</button>
+      <button class="btn-dialog confirm" id="btn-confirm-clear-slot">Clear Slot</button>
+    </div>
+  </div>
+
+  <!-- Level 4B: Dialog Confirm Delete Category -->
+  <div class="modal-overlay" id="overlay-dialog-cat" style="z-index: 2999;"></div>
+  <div class="dialog-box" id="dialog-delete-cat" style="z-index: 3000;">
+    <div class="dialog-icon"><svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></div>
+    <div class="dialog-title">Delete Category?</div>
+    <div class="dialog-desc">This action cannot be undone. This category and its assigned products will be immediately removed.</div>
+    <div class="dialog-actions">
+      <button class="btn-dialog cancel" id="btn-cancel-delete-cat">Cancel</button>
+      <button class="btn-dialog confirm" id="btn-confirm-delete-cat">Yes, Delete</button>
     </div>
   </div>
 
@@ -242,46 +328,22 @@
     import { collection, query, where, orderBy, limit, getDocs, getDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // Clean SVG Fallback Placeholder for missing images
+    const IMGBB_API_KEY = '9a111fa5355e1361b7ef649258165477';
     const defaultPlaceholderImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'><path d='M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'/></svg>";
-    
-    // UI Elements
-    const slotsList = document.getElementById('slots-list');
-    const slotCounter = document.getElementById('slot-counter');
-    
-    // Layer 1
-    const modalSheet = document.getElementById('modal-sheet');
-    const overlaySheet = document.getElementById('overlay-sheet');
-    const sheetPreview = document.getElementById('sheet-preview');
-    const btnSheetChange = document.getElementById('btn-sheet-change');
-    const btnSheetRemove = document.getElementById('btn-sheet-remove');
+    const catPlaceholderSVG = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>`;
 
-    // Layer 2
-    const modalSearch = document.getElementById('modal-search');
-    const overlaySearch = document.getElementById('overlay-search');
-    const inventoryList = document.getElementById('inventory-list');
-    const inventorySearchInput = document.getElementById('inventory-search-input');
-    const clearSearchBtn = document.getElementById('clear-search-btn');
-    const loadingInventory = document.getElementById('loading-inventory');
-    const sentinelInventory = document.getElementById('inventory-sentinel');
-    const searchModalTitle = document.getElementById('search-modal-title');
-
-    // Layer 3 Confirm Dialog
-    const modalDialog = document.getElementById('modal-dialog');
-    const overlayDialog = document.getElementById('overlay-dialog');
-    const btnDialogConfirm = document.getElementById('btn-dialog-confirm');
-
-    // Global State
+    // Core Data State
+    let currentLayoutData = { slots: {}, categories: [] };
+    let productCache = {};
     let modalStack = [];
-    let currentLayoutData = {}; 
-    let activeSlotIndex = null;
-    let inventorySearchDebounce;
+    
+    // Edit Context Routing Engine
+    // type: 'hero' | 'category' | null
+    let activeContext = { type: null, catId: null, slotIndex: null };
+    
+    // Category Upload State
+    let tempUploadedImgUrl = '';
 
-    // Locked Pagination State
-    let isFetchingInventory = false;
-    let currentSearchKeyword = '';
-
-    // Smart Image Extractor based on search.html structure
     const getProductImage = (prod) => {
       if (prod.images && prod.images.thumbnail) return prod.images.thumbnail;
       if (prod.image) return prod.image;
@@ -289,348 +351,464 @@
       return defaultPlaceholderImg;
     };
 
-    const generateInventorySkeletons = (count = 4) => Array(count).fill(`
-      <div class="inventory-item" style="pointer-events:none;">
-        <div class="skeleton inv-img" style="border:none;"></div>
-        <div class="inv-info" style="gap:8px;">
-          <div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div>
-          <div class="skeleton" style="height:16px; width:40%; border-radius:4px;"></div>
-        </div>
-      </div>
-    `).join('');
+    onAuthStateChanged(auth, (user) => { if (user) fetchMasterLayout(); });
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) fetchHomepageLayout();
-    });
-
-    // --- 1. Fetch Layout Document ---
-    async function fetchHomepageLayout() {
+    // --- 1. Central Data Fetch & Dashboard Render ---
+    async function fetchMasterLayout() {
       try {
-        const layoutDocRef = doc(db, "layout", "homepage");
-        const layoutSnap = await getDoc(layoutDocRef);
-        
+        const layoutSnap = await getDoc(doc(db, "layout", "homepage"));
         if (layoutSnap.exists()) {
-          currentLayoutData = layoutSnap.data().slots || {};
-        } else {
-          currentLayoutData = {};
+          const data = layoutSnap.data();
+          currentLayoutData.slots = data.slots || {};
+          currentLayoutData.categories = data.categories || [];
         }
-        await renderSlotsFeed();
+        await preloadRequiredProducts();
+        renderDashboard();
       } catch (err) {
-        console.error("Failed to load layout:", err);
-        slotsList.innerHTML = `<p style="color:var(--warning); text-align:center;">Failed to load homepage layout.</p>`;
+        console.error("Layout Fetch Error:", err);
       }
     }
 
-    // --- 2. Render 16 Slots List ---
-    async function renderSlotsFeed() {
-      let filledCount = 0;
-      const productIdsToFetch = [];
-      
-      for (let i = 1; i <= 16; i++) {
-        const pId = currentLayoutData[i];
-        if (pId) {
-          filledCount++;
-          if (!productIdsToFetch.includes(pId)) productIdsToFetch.push(pId);
-        }
+    async function preloadRequiredProducts() {
+      const ids = new Set();
+      for (let i = 1; i <= 16; i++) if (currentLayoutData.slots[i]) ids.add(currentLayoutData.slots[i]);
+      currentLayoutData.categories.forEach(cat => {
+        if(cat.slots) for (let i = 1; i <= 10; i++) if (cat.slots[i]) ids.add(cat.slots[i]);
+      });
+
+      const fetchIds = Array.from(ids).filter(id => !productCache[id]);
+      if (fetchIds.length === 0) return;
+
+      try {
+        const promises = fetchIds.map(id => getDoc(doc(db, "products", id)));
+        const docs = await Promise.all(promises);
+        docs.forEach(d => { if (d.exists()) productCache[d.id] = { id: d.id, ...d.data() }; });
+      } catch (e) {}
+    }
+
+    async function saveMasterLayout() {
+      try {
+        await setDoc(doc(db, "layout", "homepage"), {
+          slots: currentLayoutData.slots,
+          categories: currentLayoutData.categories,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        renderDashboard(); // Re-sync dashboard counters
+      } catch (e) {
+        console.error("Save failed", e);
+        alert("Failed to save to database.");
+        throw e;
+      }
+    }
+
+    function renderDashboard() {
+      // 1. Update Hero Card
+      let heroFilled = 0;
+      for (let i = 1; i <= 16; i++) if (currentLayoutData.slots[i]) heroFilled++;
+      document.getElementById('dash-hero-badge').innerText = `${heroFilled}/16 Live`;
+
+      // 2. Render Categories Grid
+      const grid = document.getElementById('dash-categories-grid');
+      grid.innerHTML = '';
+
+      if (currentLayoutData.categories.length === 0) {
+        grid.innerHTML = `<div style="grid-column: span 2; text-align:center; padding:24px; color:var(--text-sub); font-size:14px;">No custom categories created yet.</div>`;
       }
 
-      slotCounter.innerText = `${filledCount}/16 Slots Filled`;
+      currentLayoutData.categories.forEach(cat => {
+        let catFilled = 0;
+        if(cat.slots) { for (let i = 1; i <= 10; i++) if (cat.slots[i]) catFilled++; }
+        
+        const card = document.createElement('div');
+        card.className = 'cat-card';
+        card.innerHTML = `
+          <div class="cat-img-wrap">
+            ${cat.image ? `<img src="${cat.image}" class="cat-img">` : `<div class="cat-placeholder">${catPlaceholderSVG}</div>`}
+          </div>
+          <div class="cat-details">
+            <div class="cat-name">${cat.name}</div>
+            <div class="cat-meta">${catFilled}/10 Slots Filled</div>
+          </div>
+        `;
+        card.onclick = () => {
+          if (navigator.vibrate) navigator.vibrate(15);
+          openCategoryManager(cat.id);
+        };
+        grid.appendChild(card);
+      });
+    }
 
-      const productMap = {};
-      if (productIdsToFetch.length > 0) {
-        try {
-          const promises = productIdsToFetch.map(id => getDoc(doc(db, "products", id)));
-          const docs = await Promise.all(promises);
-          docs.forEach(d => {
-            if (d.exists()) productMap[d.id] = { id: d.id, ...d.data() };
-          });
-        } catch(e) { console.error("Error fetching slot products", e); }
+    // --- 2. Advanced Routing Engine (Hardware Back Support) ---
+    function pushModal(id) {
+      modalStack.push(id);
+      history.pushState({ modal: id }, '');
+    }
+
+    function popModal(idToClose) {
+      document.getElementById(idToClose).classList.remove('active');
+      if (idToClose === 'sheet-cat-settings' || idToClose === 'sheet-slot-options') {
+        document.getElementById('overlay-shared').classList.remove('active');
       }
+      if (idToClose === 'dialog-clear-slot') document.getElementById('overlay-dialog-slot').classList.remove('active');
+      if (idToClose === 'dialog-delete-cat') document.getElementById('overlay-dialog-cat').classList.remove('active');
+    }
 
-      slotsList.innerHTML = '';
+    window.addEventListener('popstate', () => {
+      if (modalStack.length > 0) {
+        const top = modalStack.pop();
+        popModal(top);
+      }
+    });
 
-      for (let i = 1; i <= 16; i++) {
-        const pId = currentLayoutData[i];
-        const product = pId ? productMap[pId] : null;
+    const bindClose = (btnId, modalId) => {
+      document.getElementById(btnId).addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(10);
+        if (modalStack.length > 0) history.back();
+      });
+    };
 
+    bindClose('btn-close-hero', 'modal-hero-manager');
+    bindClose('btn-close-cat', 'modal-cat-manager');
+    bindClose('btn-close-cat-settings', 'sheet-cat-settings');
+    bindClose('btn-close-slot-options', 'sheet-slot-options');
+    bindClose('btn-close-search', 'modal-search');
+    bindClose('btn-cancel-clear-slot', 'dialog-clear-slot');
+    bindClose('btn-cancel-delete-cat', 'dialog-delete-cat');
+    
+    document.getElementById('overlay-shared').addEventListener('click', () => { if (modalStack.length > 0) history.back(); });
+    document.getElementById('overlay-dialog-slot').addEventListener('click', () => { if (modalStack.length > 0) history.back(); });
+    document.getElementById('overlay-dialog-cat').addEventListener('click', () => { if (modalStack.length > 0) history.back(); });
+
+    // --- 3. View Renderers ---
+    function renderGenericSlotFeed(containerId, totalSlots, dataSourceObj, contextType, parentCatId = null) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      for (let i = 1; i <= totalSlots; i++) {
+        const pId = dataSourceObj ? dataSourceObj[i] : null;
+        const product = pId ? productCache[pId] : null;
         const row = document.createElement('div');
 
         if (product) {
           row.className = 'slot-card';
-          const imgSrc = getProductImage(product);
           row.innerHTML = `
             <div class="slot-number">${i}</div>
-            <img src="${imgSrc}" class="slot-img" onerror="this.src='${defaultPlaceholderImg}'">
+            <img src="${getProductImage(product)}" class="slot-img" onerror="this.src='${defaultPlaceholderImg}'">
             <div class="slot-info">
-              <div class="slot-name">${product.name || product.title || 'Unnamed Product'}</div>
-              <div class="slot-meta">
-                <span class="slot-price">₹${(product.price || 0).toLocaleString('en-IN')}</span>
-              </div>
+              <div class="slot-name">${product.name}</div>
+              <div class="slot-price">₹${(product.price || 0).toLocaleString('en-IN')}</div>
             </div>
             <div class="slot-action-hint">Manage</div>
           `;
-          row.addEventListener('click', () => {
+          row.onclick = () => {
             if (navigator.vibrate) navigator.vibrate(15);
-            openSlotOptionsSheet(i, product);
-          });
+            activeContext = { type: contextType, catId: parentCatId, slotIndex: i };
+            openSlotOptions(product);
+          };
         } else {
           row.className = 'slot-card empty';
           row.innerHTML = `
             <div class="slot-number">${i}</div>
-            <div class="empty-content">
-              <div class="empty-icon-box">+</div>
-              <div class="empty-text">Assign Product to Slot ${i}</div>
-            </div>
+            <div class="empty-content"><div class="empty-icon-box">+</div><div class="empty-text">Assign to Slot ${i}</div></div>
           `;
-          row.addEventListener('click', () => {
+          row.onclick = () => {
             if (navigator.vibrate) navigator.vibrate(15);
-            openInventorySearchModal(i);
-          });
+            activeContext = { type: contextType, catId: parentCatId, slotIndex: i };
+            openInventorySearch();
+          };
         }
-        slotsList.appendChild(row);
+        container.appendChild(row);
       }
     }
 
-    // --- 3. Hardware Back Button Routing System ---
-    function pushModal(modalId) {
-      modalStack.push(modalId);
-      history.pushState({ modal: modalId }, '');
-    }
-
-    function closeTopModal() {
-      const top = modalStack.pop();
-      if (top === 'dialog') {
-        modalDialog.classList.remove('active');
-        overlayDialog.classList.remove('active');
-      } else if (top === 'search') {
-        modalSearch.classList.remove('active');
-        overlaySearch.classList.remove('active');
-      } else if (top === 'sheet') {
-        modalSheet.classList.remove('active');
-        overlaySheet.classList.remove('active');
-        activeSlotIndex = null;
-      }
-    }
-
-    window.addEventListener('popstate', () => {
-      if (modalStack.length > 0) closeTopModal();
-    });
-
-    ['btn-close-sheet', 'overlay-sheet', 'btn-close-search', 'overlay-search', 'btn-dialog-cancel', 'overlay-dialog'].forEach(id => {
-      document.getElementById(id).addEventListener('click', () => {
-        if (navigator.vibrate) navigator.vibrate(10);
-        if (modalStack.length > 0) history.back();
-      });
-    });
-
-    // --- 4. Layer 1: Slot Options Sheet ---
-    function openSlotOptionsSheet(slotIndex, product) {
-      activeSlotIndex = slotIndex;
-      document.getElementById('sheet-title').innerText = `Manage Slot #${slotIndex}`;
+    document.getElementById('btn-open-hero').onclick = () => {
+      if (navigator.vibrate) navigator.vibrate(15);
+      renderGenericSlotFeed('hero-slots-list', 16, currentLayoutData.slots, 'hero');
+      let filled = 0; for(let i=1; i<=16; i++) if(currentLayoutData.slots[i]) filled++;
+      document.getElementById('hero-modal-badge').innerText = `${filled}/16`;
       
-      const imgSrc = getProductImage(product);
-      sheetPreview.innerHTML = `
-        <img src="${imgSrc}" class="sheet-product-img" onerror="this.src='${defaultPlaceholderImg}'">
-        <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:4px;">
-          <div style="font-size:16px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-main);">${product.name || product.title}</div>
-          <div style="font-size:14px; font-weight:800; color:var(--primary);">₹${(product.price || 0).toLocaleString('en-IN')}</div>
+      document.getElementById('modal-hero-manager').classList.add('active');
+      pushModal('modal-hero-manager');
+    };
+
+    function openCategoryManager(catId) {
+      const cat = currentLayoutData.categories.find(c => c.id === catId);
+      if (!cat) return;
+      
+      document.getElementById('cat-modal-title').innerText = cat.name;
+      renderGenericSlotFeed('cat-slots-list', 10, cat.slots || {}, 'category', cat.id);
+      
+      document.getElementById('btn-open-cat-settings').onclick = () => {
+        if (navigator.vibrate) navigator.vibrate(15);
+        openCategorySettings(cat);
+      };
+
+      document.getElementById('modal-cat-manager').classList.add('active');
+      pushModal('modal-cat-manager');
+    }
+
+    // --- 4. Category Settings & ImgBB Engine ---
+    document.getElementById('btn-fab-create-cat').onclick = () => {
+      if (navigator.vibrate) navigator.vibrate(15);
+      openCategorySettings(null); // Null indicates new creation
+    };
+
+    function openCategorySettings(catObj) {
+      const isNew = !catObj;
+      activeContext = { type: 'category', catId: isNew ? null : catObj.id, slotIndex: null };
+      
+      document.getElementById('cat-settings-title').innerText = isNew ? 'Create Category' : 'Edit Category';
+      document.getElementById('cat-name-input').value = isNew ? '' : catObj.name;
+      tempUploadedImgUrl = isNew ? '' : (catObj.image || '');
+
+      const imgEl = document.getElementById('cat-preview-img');
+      const phEl = document.getElementById('cat-placeholder-icon');
+      const btnUpl = document.getElementById('btn-upload-cat-img');
+      const btnTxt = document.getElementById('btn-upload-cat-text');
+      
+      if (tempUploadedImgUrl) {
+        imgEl.src = tempUploadedImgUrl;
+        imgEl.style.display = 'block';
+        phEl.style.display = 'none';
+        btnUpl.classList.add('has-image');
+        btnTxt.innerText = 'Change Image';
+      } else {
+        imgEl.style.display = 'none';
+        phEl.style.display = 'block';
+        btnUpl.classList.remove('has-image');
+        btnTxt.innerText = 'Upload Cover Image';
+      }
+
+      const dz = document.getElementById('cat-danger-zone');
+      dz.style.display = isNew ? 'none' : 'block';
+
+      document.getElementById('overlay-shared').classList.add('active');
+      document.getElementById('sheet-cat-settings').classList.add('active');
+      pushModal('sheet-cat-settings');
+    }
+
+    // Canvas Compressor -> ImgBB
+    const catFileInput = document.getElementById('hidden-cat-file');
+    const catBtnUpl = document.getElementById('btn-upload-cat-img');
+    const catBtnTxt = document.getElementById('btn-upload-cat-text');
+
+    catBtnUpl.onclick = () => catFileInput.click();
+
+    catFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      catBtnTxt.innerText = 'Compressing...';
+      catBtnUpl.style.pointerEvents = 'none';
+
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const targetW = 800; const targetH = 450; // 16:9 ratio
+        canvas.width = targetW; canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+
+        const ratio = Math.max(targetW / img.width, targetH / img.height);
+        const x = (targetW - img.width * ratio) / 2;
+        const y = (targetH - img.height * ratio) / 2;
+        
+        ctx.drawImage(img, 0, 0, img.width, img.height, x, y, img.width * ratio, img.height * ratio);
+        const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+        
+        catBtnTxt.innerText = 'Uploading...';
+        
+        try {
+          const formData = new FormData(); formData.append('image', base64Image);
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+          const data = await res.json();
+          if (!data.success) throw new Error("ImgBB Failed");
+          
+          tempUploadedImgUrl = data.data.url;
+          
+          document.getElementById('cat-preview-img').src = tempUploadedImgUrl;
+          document.getElementById('cat-preview-img').style.display = 'block';
+          document.getElementById('cat-placeholder-icon').style.display = 'none';
+          catBtnUpl.classList.add('has-image');
+          catBtnTxt.innerText = 'Change Image';
+        } catch (err) {
+          alert("Image upload failed.");
+          catBtnTxt.innerText = 'Retry Upload';
+        }
+        catBtnUpl.style.pointerEvents = 'auto';
+        catFileInput.value = '';
+      };
+    });
+
+    document.getElementById('btn-save-cat').onclick = async () => {
+      const name = document.getElementById('cat-name-input').value.trim();
+      if (!name) return alert("Please enter a category name.");
+      
+      const btn = document.getElementById('btn-save-cat');
+      btn.innerText = 'Saving...'; btn.style.pointerEvents = 'none';
+
+      if (activeContext.catId) {
+        // Edit existing
+        const cat = currentLayoutData.categories.find(c => c.id === activeContext.catId);
+        cat.name = name; cat.image = tempUploadedImgUrl;
+      } else {
+        // Create new
+        currentLayoutData.categories.push({
+          id: Date.now(), name: name, image: tempUploadedImgUrl, slots: {}
+        });
+      }
+
+      await saveMasterLayout();
+      
+      btn.innerText = 'Save Category'; btn.style.pointerEvents = 'auto';
+      if (navigator.vibrate) navigator.vibrate(20);
+      
+      history.back(); // close settings sheet
+      if (activeContext.catId) {
+        document.getElementById('cat-modal-title').innerText = name; // Update title live if in manager
+      }
+    };
+
+    document.getElementById('btn-req-delete-cat').onclick = () => {
+      if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+      document.getElementById('overlay-dialog-cat').classList.add('active');
+      document.getElementById('dialog-delete-cat').classList.add('active');
+      pushModal('dialog-delete-cat');
+    };
+
+    document.getElementById('btn-confirm-delete-cat').onclick = async () => {
+      currentLayoutData.categories = currentLayoutData.categories.filter(c => c.id !== activeContext.catId);
+      await saveMasterLayout();
+      if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+      history.back(); // close dialog
+      history.back(); // close settings sheet
+      history.back(); // close cat manager (return to dash)
+    };
+
+    // --- 5. Slot Assignment Modals (Shared for Hero & Category) ---
+    function openSlotOptions(product) {
+      document.getElementById('slot-options-title').innerText = `Slot #${activeContext.slotIndex}`;
+      document.getElementById('slot-preview-content').innerHTML = `
+        <img src="${getProductImage(product)}" style="width:64px; height:64px; border-radius:12px; object-fit:contain; border:1px solid var(--border); padding:4px;" onerror="this.src='${defaultPlaceholderImg}'">
+        <div style="flex:1; display:flex; flex-direction:column; gap:4px; overflow:hidden;">
+          <div style="font-size:16px; font-weight:800; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${product.name}</div>
+          <div style="font-size:14px; color:var(--primary); font-weight:800;">₹${(product.price || 0).toLocaleString('en-IN')}</div>
         </div>
       `;
-
-      btnSheetChange.onclick = () => {
-        if (navigator.vibrate) navigator.vibrate(15);
-        
-        // Instant visual swap from Layer 1 to Layer 2
-        modalSheet.classList.remove('active');
-        overlaySheet.classList.remove('active');
-        
-        // Safely swap the history state without triggering the back navigation popstate close
-        modalStack.pop();
-        history.replaceState({ modal: 'search' }, '');
-        modalStack.push('search');
-        
-        // Setup and open Search Modal explicitly
-        activeSlotIndex = slotIndex;
-        searchModalTitle.innerText = `Assign to Slot #${slotIndex}`;
-        inventorySearchInput.value = '';
-        clearSearchBtn.style.display = 'none';
-        currentSearchKeyword = '';
-        
-        inventoryList.innerHTML = generateInventorySkeletons(4);
-        document.getElementById('inventory-list').scrollTop = 0;
-        
-        fetchInventory();
-
-        overlaySearch.classList.add('active');
-        modalSearch.classList.add('active');
-      };
-
-      btnSheetRemove.onclick = () => {
-        if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
-        openConfirmModal(); // open layer 3
-      };
-
-      overlaySheet.classList.add('active');
-      modalSheet.classList.add('active');
-      pushModal('sheet');
+      document.getElementById('overlay-shared').classList.add('active');
+      document.getElementById('sheet-slot-options').classList.add('active');
+      pushModal('sheet-slot-options');
     }
 
-    // --- Layer 3: Native HTML Confirmation Modal ---
-    function openConfirmModal() {
-      overlayDialog.classList.add('active');
-      modalDialog.classList.add('active');
-      pushModal('dialog');
-    }
+    document.getElementById('btn-slot-change').onclick = () => {
+      if (navigator.vibrate) navigator.vibrate(15);
+      // Clean swap from bottom sheet to full screen search without triggering back navigation
+      document.getElementById('sheet-slot-options').classList.remove('active');
+      document.getElementById('overlay-shared').classList.remove('active');
+      modalStack.pop(); history.replaceState({ modal: 'modal-search' }, ''); modalStack.push('modal-search');
+      
+      openInventorySearch();
+    };
 
-    btnDialogConfirm.addEventListener('click', async () => {
-      if (!activeSlotIndex) return;
+    document.getElementById('btn-slot-remove').onclick = () => {
+      if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+      document.getElementById('overlay-dialog-slot').classList.add('active');
+      document.getElementById('dialog-clear-slot').classList.add('active');
+      pushModal('dialog-clear-slot');
+    };
+
+    document.getElementById('btn-confirm-clear-slot').onclick = async () => {
+      await assignProductToSlot(null);
       if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
-      
-      const originalText = btnDialogConfirm.innerHTML;
-      btnDialogConfirm.innerHTML = 'Removing...';
-      btnDialogConfirm.disabled = true;
+      history.back(); // close dialog
+      history.back(); // close options sheet
+    };
 
-      try {
-        await updateSlotAssignment(activeSlotIndex, null);
-        history.back(); // Close Layer 3 (Dialog)
-        history.back(); // Close Layer 1 (Bottom Sheet)
-      } catch (err) {
-        alert("Failed to remove product.");
-      } finally {
-        btnDialogConfirm.innerHTML = originalText;
-        btnDialogConfirm.disabled = false;
-      }
-    });
-
-    // --- 5. Layer 2: Inventory Search (STRICTLY NO PAGINATION) ---
-    function openInventorySearchModal(slotIndex) {
-      activeSlotIndex = slotIndex;
-      searchModalTitle.innerText = `Assign to Slot #${slotIndex}`;
-      inventorySearchInput.value = '';
-      clearSearchBtn.style.display = 'none';
-      currentSearchKeyword = '';
+    // --- 6. Inventory Search Engine ---
+    let invSearchDebounce;
+    function openInventorySearch() {
+      document.getElementById('search-title').innerText = `Assign to Slot #${activeContext.slotIndex}`;
+      document.getElementById('inv-search-input').value = '';
+      document.getElementById('inv-search-list').innerHTML = `<div style="padding:24px; text-align:center; color:var(--text-sub); font-size:14px;">Loading latest inventory...</div>`;
       
-      inventoryList.innerHTML = generateInventorySkeletons(4);
-      document.getElementById('inventory-list').scrollTop = 0;
+      document.getElementById('modal-search').classList.add('active');
+      if (modalStack[modalStack.length-1] !== 'modal-search') pushModal('modal-search');
       
-      fetchInventory();
-
-      overlaySearch.classList.add('active');
-      modalSearch.classList.add('active');
-      pushModal('search');
+      fetchInventoryResults('');
     }
 
-    inventorySearchInput.addEventListener('input', (e) => {
-      clearTimeout(inventorySearchDebounce);
-      // Strips special characters just like search.html
+    document.getElementById('inv-search-input').addEventListener('input', (e) => {
+      clearTimeout(invSearchDebounce);
       const val = e.target.value.trim().toLowerCase().replace(/[\.\#\$\[\]]/g, '');
-      
-      if (val.length > 0) clearSearchBtn.style.display = 'flex';
-      else clearSearchBtn.style.display = 'none';
-
-      inventorySearchDebounce = setTimeout(() => {
-        currentSearchKeyword = val;
-        fetchInventory(val);
-      }, 300); // Debounce speed matched to search.html
+      invSearchDebounce = setTimeout(() => fetchInventoryResults(val), 300);
     });
 
-    clearSearchBtn.addEventListener('click', () => {
-      if (navigator.vibrate) navigator.vibrate(40);
-      inventorySearchInput.value = '';
-      clearSearchBtn.style.display = 'none';
-      currentSearchKeyword = '';
-      fetchInventory('');
-      inventorySearchInput.focus();
-    });
-
-    // Fetch Inventory strictly locked to limit(10) with zero continuation
-    async function fetchInventory(keyword = '') {
-      if (isFetchingInventory) return;
-      isFetchingInventory = true;
-      
-      if (inventoryList.children.length === 0 || currentSearchKeyword) {
-        inventoryList.innerHTML = generateInventorySkeletons(4);
-      }
-
+    async function fetchInventoryResults(keyword) {
+      const container = document.getElementById('inv-search-list');
       try {
         let q;
         if (keyword.length > 0) {
-          const searchWords = keyword.split(' ').filter(word => word.trim().length > 0);
-          const queryConstraints = searchWords.map(word => where(`searchKeywords.${word}`, "==", true));
-          q = query(collection(db, "products"), ...queryConstraints, limit(10));
+          const words = keyword.split(' ').filter(w => w.trim().length > 0);
+          const constraints = words.map(w => where(`searchKeywords.${w}`, "==", true));
+          q = query(collection(db, "products"), ...constraints, limit(15));
         } else {
-          q = query(collection(db, "products"), orderBy("name"), limit(10));
+          q = query(collection(db, "products"), orderBy("name"), limit(15));
         }
 
         const snap = await getDocs(q);
+        container.innerHTML = '';
         
-        inventoryList.innerHTML = '';
-        loadingInventory.style.display = 'none'; // Ensure spinner stays hidden permanently
-
         if (snap.empty) {
-          inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub); font-weight:600;">No products match your search.</div>`;
-          isFetchingInventory = false;
+          container.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-sub);">No products match your search.</div>`;
           return;
         }
 
         snap.docs.forEach(docSnap => {
-          const prod = docSnap.data();
-          prod.id = docSnap.id;
-
+          const prod = { id: docSnap.id, ...docSnap.data() };
+          productCache[prod.id] = prod; // cache it instantly
+          
           const row = document.createElement('div');
           row.className = 'inventory-item';
-          const imgSrc = getProductImage(prod);
-          
           row.innerHTML = `
-            <img src="${imgSrc}" class="inv-img" onerror="this.src='${defaultPlaceholderImg}'">
-            <div class="inv-info">
-              <div class="inv-name">${prod.name || prod.title || 'Unnamed Product'}</div>
-              <div class="inv-meta">₹${(prod.price || 0).toLocaleString('en-IN')}</div>
+            <img src="${getProductImage(prod)}" class="inv-img" onerror="this.src='${defaultPlaceholderImg}'">
+            <div style="flex:1; overflow:hidden; display:flex; flex-direction:column; gap:4px;">
+              <div style="font-size:15px; font-weight:800; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${prod.name}</div>
+              <div style="color:var(--primary); font-size:14px; font-weight:800;">₹${(prod.price || 0).toLocaleString('en-IN')}</div>
             </div>
-            <div class="btn-select">Assign</div>
+            <button class="btn-select">Assign</button>
           `;
-
-          row.addEventListener('click', async () => {
+          row.onclick = async () => {
             if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
-            
             const btn = row.querySelector('.btn-select');
-            btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="animation: spin 1s linear infinite; vertical-align:middle;"><circle cx="12" cy="12" r="10" stroke-opacity="0.3"></circle><path d="M12 2v4"></path></svg>`;
-            
-            await updateSlotAssignment(activeSlotIndex, prod.id);
-            // We must go back in history to properly clear the modal state
-            history.back(); 
-          });
-
-          inventoryList.appendChild(row);
+            btn.innerHTML = '...'; btn.style.opacity = '0.7';
+            await assignProductToSlot(prod.id);
+            history.back(); // close search modal
+          };
+          container.appendChild(row);
         });
-
       } catch (err) {
-        console.error("Inventory fetch error:", err);
-        loadingInventory.style.display = 'none';
+        container.innerHTML = `<div style="padding:40px; text-align:center; color:var(--warning);">Error loading inventory.</div>`;
       }
-      isFetchingInventory = false;
     }
 
-    // Removed pagination observer as requested: strictly limited to 10 products
-    // const inventoryObserver = new IntersectionObserver(...)
-    // inventoryObserver.observe(sentinelInventory);
-
-    // --- 6. Save Assignment to Single Homepage Document ---
-    async function updateSlotAssignment(slotIndex, productId) {
-      try {
-        currentLayoutData[slotIndex] = productId; 
-
-        const layoutDocRef = doc(db, "layout", "homepage");
-        await setDoc(layoutDocRef, {
-          slots: currentLayoutData,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-
-        if (navigator.vibrate) navigator.vibrate(20);
-        await renderSlotsFeed(); 
-      } catch (err) {
-        console.error("Failed to update layout slot:", err);
-        alert("Failed to save slot assignment.");
+    // --- 7. The Core Assignment Logic ---
+    async function assignProductToSlot(productId) {
+      if (activeContext.type === 'hero') {
+        currentLayoutData.slots[activeContext.slotIndex] = productId;
+      } else if (activeContext.type === 'category') {
+        const cat = currentLayoutData.categories.find(c => c.id === activeContext.catId);
+        if(!cat.slots) cat.slots = {};
+        cat.slots[activeContext.slotIndex] = productId;
+      }
+      
+      await saveMasterLayout();
+      
+      // Live UI Update depending on what is open
+      if (activeContext.type === 'hero') renderGenericSlotFeed('hero-slots-list', 16, currentLayoutData.slots, 'hero');
+      if (activeContext.type === 'category') {
+        const cat = currentLayoutData.categories.find(c => c.id === activeContext.catId);
+        renderGenericSlotFeed('cat-slots-list', 10, cat.slots, 'category', cat.id);
       }
     }
   </script>
