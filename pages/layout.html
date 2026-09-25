@@ -172,8 +172,11 @@
     /* Dark Room Crop Editor */
     .crop-editor-mode { --bg-color: #000000; --surface-color: #1a1a1a; --border: #333333; --text-main: #ffffff; }
     .crop-area { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000000; touch-action: none; width: 100%; }
-    #crop-target-img { position: absolute; transform-origin: top left; will-change: transform; cursor: grab; }
+    
+    /* ADDED top: 0; left: 0; to fix the flexbox center offset bug */
+    #crop-target-img { position: absolute; top: 0; left: 0; transform-origin: top left; will-change: transform; cursor: grab; }
     #crop-target-img:active { cursor: grabbing; }
+    
     .crop-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
     .crop-square { width: 300px; height: 300px; border: 2px solid #ffffff; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75); border-radius: 4px; pointer-events: none; }
     @media(min-width: 400px) { .crop-square { width: 340px; height: 340px; } }
