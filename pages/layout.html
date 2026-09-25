@@ -279,7 +279,7 @@
     </div>
   </div>
 
-  <!-- Level 1B: Category 30-Slot Manager (Full Screen) -->
+  <!-- Level 1B: Category 60-Slot Manager (Full Screen) -->
   <div class="fs-modal" id="modal-cat-manager" style="z-index: 1000;">
     <div class="fs-header">
       <div class="fs-header-left">
@@ -513,7 +513,7 @@
       const ids = new Set();
       for (let i = 1; i <= 16; i++) if (currentLayoutData.slots[i]) ids.add(currentLayoutData.slots[i]);
       currentLayoutData.categories.forEach(cat => {
-        if(cat.slots) for (let i = 1; i <= 30; i++) if (cat.slots[i]) ids.add(cat.slots[i]);
+        if(cat.slots) for (let i = 1; i <= 60; i++) if (cat.slots[i]) ids.add(cat.slots[i]);
       });
 
       const fetchIds = Array.from(ids).filter(id => !productCache[id]);
@@ -577,7 +577,7 @@
 
       currentLayoutData.categories.forEach(cat => {
         let catFilled = 0;
-        if(cat.slots) { for (let i = 1; i <= 30; i++) if (cat.slots[i]) catFilled++; }
+        if(cat.slots) { for (let i = 1; i <= 60; i++) if (cat.slots[i]) catFilled++; }
         
         const card = document.createElement('div');
         card.className = 'cat-card';
@@ -587,7 +587,7 @@
           </div>
           <div class="cat-details">
             <div class="cat-name">${cat.name}</div>
-            <div class="cat-meta">${catFilled}/30 Slots Filled</div>
+            <div class="cat-meta">${catFilled}/60 Slots Filled</div>
           </div>
         `;
         card.onclick = () => {
@@ -780,7 +780,7 @@
       if (!cat) return;
       
       document.getElementById('cat-modal-title').innerText = cat.name;
-      renderGenericSlotFeed('cat-slots-list', 30, cat.slots || {}, 'category', cat.id);
+      renderGenericSlotFeed('cat-slots-list', 60, cat.slots || {}, 'category', cat.id);
       
       document.getElementById('btn-open-cat-settings').onclick = () => {
         if (navigator.vibrate) navigator.vibrate(15);
@@ -1154,7 +1154,7 @@
       if (activeContext.type === 'hero') renderGenericSlotFeed('hero-slots-list', 16, currentLayoutData.slots, 'hero');
       if (activeContext.type === 'category') {
         const cat = currentLayoutData.categories.find(c => c.id === activeContext.catId);
-        renderGenericSlotFeed('cat-slots-list', 30, cat.slots, 'category', cat.id);
+        renderGenericSlotFeed('cat-slots-list', 60, cat.slots, 'category', cat.id);
       }
     }
   </script>
