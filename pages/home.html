@@ -645,10 +645,8 @@
         btnDialogConfirm.innerHTML = originalText;
         btnDialogConfirm.disabled = false;
       } finally {
-        if(pendingActionType !== 'approve') { // Approve handles reset in catch manually
-           btnDialogConfirm.innerHTML = originalText;
-           btnDialogConfirm.disabled = false;
-        }
+        btnDialogConfirm.innerHTML = originalText;
+        btnDialogConfirm.disabled = false;
       }
     });
 
@@ -692,14 +690,17 @@
         currentItems.forEach((item, index) => {
           const itemTotal = (item.price || 0) * (item.qty || 1);
           calcSubTotal += itemTotal;
+          const rowClass = isRejected ? "item-row rejected" : "item-row";
+          const imgFilter = isRejected ? "filter: grayscale(100%);" : "";
+          const textStyle = isRejected ? "text-decoration: line-through;" : "";
           itemsHtml += `
-            <div class="item-row">
-              <img src="${item.image || 'placeholder.png'}" onclick="window.openImageViewer('${item.image || 'placeholder.png'}')" style="width:60px; height:60px; object-fit:contain; border-radius:8px; background:var(--bg-color); padding:4px; flex-shrink:0; cursor:pointer;">
+            <div class="${rowClass}">
+              <img src="${item.image || 'placeholder.png'}" onclick="window.openImageViewer('${item.image || 'placeholder.png'}')" style="width:60px; height:60px; object-fit:contain; border-radius:8px; background:var(--bg-color); padding:4px; flex-shrink:0; cursor:pointer; ${imgFilter}">
               <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-                <div style="font-size:14px; font-weight:600; line-height:1.3; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${item.name}</div>
+                <div style="font-size:14px; font-weight:600; line-height:1.3; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; ${textStyle}">${item.name}</div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <span style="font-size:13px; color:var(--text-sub);">Qty: ${item.qty || 1}  •  <span style="font-weight:700; color:var(--text-main);">₹${itemTotal.toLocaleString('en-IN')}</span></span>
-                  ${!lockActions ? `<button class="btn-inline-action btn-inline-reject" onclick="window.toggleItemRejection(${index}, true)">Reject</button>` : ''}
+                  ${!lockActions && !isRejected ? `<button class="btn-inline-action btn-inline-reject" onclick="window.toggleItemRejection(${index}, true)">Reject</button>` : ''}
                 </div>
               </div>
             </div>
@@ -725,8 +726,9 @@
             </div>
           `;
         });
-        
-        // Reason Box Appends at Bottom
+      }
+
+      if (rejItems.length > 0 || isRejected) {
         itemsHtml += `
           <div class="reason-box-container">
             <textarea id="rejection-reason-input" class="reason-input" placeholder="Required: Reason for rejection (min 4 chars)...">${order.rejectionReason || ''}</textarea>
@@ -753,7 +755,7 @@
         </div>
       `;
 
-      if (rejItems.length > 0) {
+      if (rejItems.length > 0 || isRejected) {
          const rInput = document.getElementById('rejection-reason-input');
          const rBtn = document.getElementById('save-reason-btn');
          rInput.addEventListener('input', (e) => { rBtn.disabled = e.target.value.trim().length < 4; });
