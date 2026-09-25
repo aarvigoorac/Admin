@@ -657,33 +657,43 @@
       const tempImg = new Image();
       
       tempImg.onload = () => {
-        imgOrigW = tempImg.width;
-        imgOrigH = tempImg.height;
-        squareSize = cropSquare.offsetWidth;
-
-        // Calculate fit (cover)
-        const scaleX = squareSize / imgOrigW;
-        const scaleY = squareSize / imgOrigH;
-        cropScale = Math.max(scaleX, scaleY);
-        
-        // Center image
-        const displayW = imgOrigW * cropScale;
-        const displayH = imgOrigH * cropScale;
-        const areaRect = cropArea.getBoundingClientRect();
-        
-        cropX = (areaRect.width - displayW) / 2;
-        cropY = (areaRect.height - displayH) / 2;
-        
+        // 1. Prepare the image silently with zero opacity
+        cropImgTarget.style.opacity = '0';
+        cropImgTarget.style.transition = 'opacity 0.3s ease';
         cropImgTarget.src = objectUrl;
-        updateCropTransform();
 
-        // Push Dark Room Layer
+        // 2. Open the Dark Room Layer FIRST so the browser can compute real dimensions
         document.getElementById('modal-crop').classList.add('active');
         pushModal('modal-crop');
 
         btnTxt.innerText = tempUploadedImgUrl ? 'Change Image' : 'Upload Cover Image';
         btnUpl.style.pointerEvents = 'auto';
         catFileInput.value = ''; // reset
+
+        // 3. Wait exactly 420ms for the full-screen slide transition to lock into place
+        setTimeout(() => {
+          imgOrigW = tempImg.width;
+          imgOrigH = tempImg.height;
+          squareSize = cropSquare.offsetWidth; // Now safely calculates real > 0 values
+
+          // Calculate fit (cover)
+          const scaleX = squareSize / imgOrigW;
+          const scaleY = squareSize / imgOrigH;
+          cropScale = Math.max(scaleX, scaleY);
+          
+          // Center image initially
+          const displayW = imgOrigW * cropScale;
+          const displayH = imgOrigH * cropScale;
+          const areaRect = cropArea.getBoundingClientRect();
+          
+          cropX = (areaRect.width - displayW) / 2;
+          cropY = (areaRect.height - displayH) / 2;
+          
+          updateCropTransform();
+
+          // 4. Fade the beautifully centered image into view
+          cropImgTarget.style.opacity = '1';
+        }, 420);
       };
       tempImg.src = objectUrl;
     });
@@ -709,6 +719,7 @@
     // Drag Logic
     const onStart = (e) => {
       isDragging = true;
+      cropImgTarget.style.transition = 'none'; // Lock transition to prevent lag while dragging
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       startX = clientX - cropX;
