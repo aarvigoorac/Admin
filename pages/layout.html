@@ -56,6 +56,7 @@
     /* Dashboard: Categories Section */
     .section-header { font-size: 18px; font-weight: 800; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
     .categories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(min-width: 600px) { .categories-grid { grid-template-columns: 1fr 1fr 1fr; } }
     
     .cat-card { background: var(--surface-color); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.15s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
     .cat-card:active { transform: scale(0.96); }
@@ -85,7 +86,7 @@
     .btn-pill-action { background: var(--skeleton-base); color: var(--text-main); font-size: 14px; font-weight: 800; padding: 8px 16px; border-radius: 50px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .btn-pill-action:active { transform: scale(0.95); }
 
-    .fs-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
+    .fs-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; max-width: 900px; margin: 0 auto; width: 100%; }
 
     /* Slot Feed Rows (Reused for both 16 and 10 slot managers) */
     .slot-card { background: var(--surface-color); border-radius: 16px; padding: 12px 16px; border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; user-select: none; }
@@ -110,8 +111,8 @@
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
     /* Bottom Sheets */
-    .bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-color); border-radius: 24px 24px 0 0; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); max-height: 90vh; }
-    .bottom-sheet.active { transform: translateY(0); }
+    .bottom-sheet { position: fixed; bottom: 0; left: 50%; transform: translate(-50%, 100%); width: 100%; max-width: 600px; background: var(--bg-color); border-radius: 24px 24px 0 0; transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); max-height: 90vh; }
+    .bottom-sheet.active { transform: translate(-50%, 0); }
     .sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; position: sticky; top: 0; z-index: 10; }
     .sheet-title { font-size: 18px; font-weight: 800; }
     .sheet-scroll { padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; padding-bottom: 40px; }
@@ -145,7 +146,7 @@
     .btn-remove { background: var(--warning-bg); color: var(--warning); border: 1.5px solid var(--warning); }
 
     /* Inventory Search Modal specific */
-    .search-wrap { padding: 16px; background: var(--surface-color); border-bottom: 1px solid var(--border); position: relative; }
+    .search-wrap { padding: 16px; background: var(--surface-color); border-bottom: 1px solid var(--border); position: relative; max-width: 900px; margin: 0 auto; width: 100%; }
     .search-input-box { width: 100%; padding: 14px 16px 14px 44px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 15px; outline: none; }
     .search-input-box:focus { border-color: var(--primary); background: var(--surface-color); }
     .search-icon { position: absolute; left: 32px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; stroke: var(--text-sub); stroke-width: 2.5; }
@@ -167,6 +168,22 @@
     .btn-dialog:active { transform: scale(0.95); }
     .btn-dialog.cancel { background: var(--bg-color); color: var(--text-main); border: 1.5px solid var(--border); }
     .btn-dialog.confirm { background: var(--warning); color: white; box-shadow: 0 4px 12px rgba(179, 38, 30, 0.2); }
+
+    /* Dark Room Crop Editor */
+    .crop-editor-mode { --bg-color: #000000; --surface-color: #1a1a1a; --border: #333333; --text-main: #ffffff; }
+    .crop-area { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000000; touch-action: none; width: 100%; }
+    #crop-target-img { position: absolute; transform-origin: top left; will-change: transform; cursor: grab; }
+    #crop-target-img:active { cursor: grabbing; }
+    .crop-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+    .crop-square { width: 300px; height: 300px; border: 2px solid #ffffff; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75); border-radius: 4px; pointer-events: none; }
+    @media(min-width: 400px) { .crop-square { width: 340px; height: 340px; } }
+    @media(min-width: 600px) { .crop-square { width: 400px; height: 400px; } }
+    
+    .crop-footer { padding: 24px; display: flex; gap: 16px; background: #111111; padding-bottom: max(24px, env(safe-area-inset-bottom)); border-top: 1px solid #222222; }
+    .btn-crop { flex: 1; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 800; border: none; cursor: pointer; transition: transform 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-crop:active { transform: scale(0.96); }
+    .btn-crop-retake { background: #2a2a2a; color: #ffffff; border: 1px solid #444; }
+    .btn-crop-confirm { background: var(--primary); color: #ffffff; }
 
   </style>
 </head>
@@ -198,7 +215,7 @@
 
   <!-- Global FAB to Create Category -->
   <button class="fab" id="btn-fab-create-cat">
-    <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
   </button>
 
   <!-- Level 1A: 16-Slot Manager (Full Screen) -->
@@ -223,7 +240,7 @@
         <div class="fs-title" id="cat-modal-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">Category</div>
       </div>
       <button class="btn-pill-action" id="btn-open-cat-settings">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.127l-3.196.1a.375.375 0 01-.423-.423l.1-3.196a4.5 4.5 0 011.127-1.89l14.312-14.31z" /></svg>
         Edit
       </button>
     </div>
@@ -251,8 +268,8 @@
         </div>
         <input type="file" id="hidden-cat-file" accept="image/jpeg, image/png, image/jpg, image/*">
         <button class="btn-upload-engine" id="btn-upload-cat-img">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-          <span id="btn-upload-cat-text">Upload Image</span>
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" /></svg>
+          <span id="btn-upload-cat-text">Upload Cover Image</span>
         </button>
       </div>
 
@@ -314,12 +331,32 @@
   <!-- Level 4B: Dialog Confirm Delete Category -->
   <div class="modal-overlay" id="overlay-dialog-cat" style="z-index: 2999;"></div>
   <div class="dialog-box" id="dialog-delete-cat" style="z-index: 3000;">
-    <div class="dialog-icon"><svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></div>
+    <div class="dialog-icon"><svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg></div>
     <div class="dialog-title">Delete Category?</div>
     <div class="dialog-desc">This action cannot be undone. This category and its assigned products will be immediately removed.</div>
     <div class="dialog-actions">
       <button class="btn-dialog cancel" id="btn-cancel-delete-cat">Cancel</button>
       <button class="btn-dialog confirm" id="btn-confirm-delete-cat">Yes, Delete</button>
+    </div>
+  </div>
+
+  <!-- Level 5: Professional Crop Image Dark Room -->
+  <div class="fs-modal crop-editor-mode" id="modal-crop" style="z-index: 2500;">
+    <div class="fs-header" style="background: rgba(0,0,0,0.85); border-bottom: 1px solid #222;">
+      <div class="fs-header-left">
+        <button class="btn-icon" id="btn-close-crop" style="background: #222; color: #fff;"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg></button>
+        <div class="fs-title" style="color: #fff;">Position Image</div>
+      </div>
+    </div>
+    <div class="crop-area" id="crop-area">
+      <img id="crop-target-img" src="" alt="Crop Target">
+      <div class="crop-mask">
+        <div class="crop-square" id="crop-square"></div>
+      </div>
+    </div>
+    <div class="crop-footer">
+      <button class="btn-crop btn-crop-retake" id="btn-crop-retake">Retake</button>
+      <button class="btn-crop btn-crop-confirm" id="btn-crop-confirm">Confirm Crop</button>
     </div>
   </div>
 
@@ -338,7 +375,6 @@
     let modalStack = [];
     
     // Edit Context Routing Engine
-    // type: 'hero' | 'category' | null
     let activeContext = { type: null, catId: null, slotIndex: null };
     
     // Category Upload State
@@ -393,7 +429,7 @@
           categories: currentLayoutData.categories,
           updatedAt: new Date().toISOString()
         }, { merge: true });
-        renderDashboard(); // Re-sync dashboard counters
+        renderDashboard(); 
       } catch (e) {
         console.error("Save failed", e);
         alert("Failed to save to database.");
@@ -402,12 +438,10 @@
     }
 
     function renderDashboard() {
-      // 1. Update Hero Card
       let heroFilled = 0;
       for (let i = 1; i <= 16; i++) if (currentLayoutData.slots[i]) heroFilled++;
       document.getElementById('dash-hero-badge').innerText = `${heroFilled}/16 Live`;
 
-      // 2. Render Categories Grid
       const grid = document.getElementById('dash-categories-grid');
       grid.innerHTML = '';
 
@@ -474,6 +508,7 @@
     bindClose('btn-close-search', 'modal-search');
     bindClose('btn-cancel-clear-slot', 'dialog-clear-slot');
     bindClose('btn-cancel-delete-cat', 'dialog-delete-cat');
+    bindClose('btn-close-crop', 'modal-crop');
     
     document.getElementById('overlay-shared').addEventListener('click', () => { if (modalStack.length > 0) history.back(); });
     document.getElementById('overlay-dialog-slot').addEventListener('click', () => { if (modalStack.length > 0) history.back(); });
@@ -547,7 +582,7 @@
       pushModal('modal-cat-manager');
     }
 
-    // --- 4. Category Settings & ImgBB Engine ---
+    // --- 4. Category Settings ---
     document.getElementById('btn-fab-create-cat').onclick = () => {
       if (navigator.vibrate) navigator.vibrate(15);
       openCategorySettings(null); // Null indicates new creation
@@ -560,7 +595,17 @@
       document.getElementById('cat-settings-title').innerText = isNew ? 'Create Category' : 'Edit Category';
       document.getElementById('cat-name-input').value = isNew ? '' : catObj.name;
       tempUploadedImgUrl = isNew ? '' : (catObj.image || '');
+      updateCatPreviewUI();
 
+      const dz = document.getElementById('cat-danger-zone');
+      dz.style.display = isNew ? 'none' : 'block';
+
+      document.getElementById('overlay-shared').classList.add('active');
+      document.getElementById('sheet-cat-settings').classList.add('active');
+      pushModal('sheet-cat-settings');
+    }
+
+    function updateCatPreviewUI() {
       const imgEl = document.getElementById('cat-preview-img');
       const phEl = document.getElementById('cat-placeholder-icon');
       const btnUpl = document.getElementById('btn-upload-cat-img');
@@ -578,69 +623,159 @@
         btnUpl.classList.remove('has-image');
         btnTxt.innerText = 'Upload Cover Image';
       }
-
-      const dz = document.getElementById('cat-danger-zone');
-      dz.style.display = isNew ? 'none' : 'block';
-
-      document.getElementById('overlay-shared').classList.add('active');
-      document.getElementById('sheet-cat-settings').classList.add('active');
-      pushModal('sheet-cat-settings');
     }
 
-    // Canvas Compressor -> ImgBB
+    // --- 5. Crop & Compress Engine (Pan & Scan) ---
     const catFileInput = document.getElementById('hidden-cat-file');
-    const catBtnUpl = document.getElementById('btn-upload-cat-img');
-    const catBtnTxt = document.getElementById('btn-upload-cat-text');
+    const cropImgTarget = document.getElementById('crop-target-img');
+    const cropArea = document.getElementById('crop-area');
+    const cropSquare = document.getElementById('crop-square');
+    
+    let cropScale = 1;
+    let cropX = 0, cropY = 0;
+    let startX = 0, startY = 0;
+    let isDragging = false;
+    let imgOrigW = 0, imgOrigH = 0;
+    let squareSize = 300;
 
-    catBtnUpl.onclick = () => catFileInput.click();
+    document.getElementById('btn-upload-cat-img').onclick = () => catFileInput.click();
+    document.getElementById('btn-crop-retake').onclick = () => {
+      if (navigator.vibrate) navigator.vibrate(10);
+      catFileInput.click();
+    };
 
-    catFileInput.addEventListener('change', async (e) => {
+    catFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
-      catBtnTxt.innerText = 'Compressing...';
-      catBtnUpl.style.pointerEvents = 'none';
+      const btnTxt = document.getElementById('btn-upload-cat-text');
+      const btnUpl = document.getElementById('btn-upload-cat-img');
+      btnTxt.innerText = 'Loading...';
+      btnUpl.style.pointerEvents = 'none';
 
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
+      const objectUrl = URL.createObjectURL(file);
+      const tempImg = new Image();
       
-      img.onload = async () => {
-        const canvas = document.createElement('canvas');
-        const targetW = 800; const targetH = 450; // 16:9 ratio
-        canvas.width = targetW; canvas.height = targetH;
-        const ctx = canvas.getContext('2d');
+      tempImg.onload = () => {
+        imgOrigW = tempImg.width;
+        imgOrigH = tempImg.height;
+        squareSize = cropSquare.offsetWidth;
 
-        const ratio = Math.max(targetW / img.width, targetH / img.height);
-        const x = (targetW - img.width * ratio) / 2;
-        const y = (targetH - img.height * ratio) / 2;
+        // Calculate fit (cover)
+        const scaleX = squareSize / imgOrigW;
+        const scaleY = squareSize / imgOrigH;
+        cropScale = Math.max(scaleX, scaleY);
         
-        ctx.drawImage(img, 0, 0, img.width, img.height, x, y, img.width * ratio, img.height * ratio);
-        const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+        // Center image
+        const displayW = imgOrigW * cropScale;
+        const displayH = imgOrigH * cropScale;
+        const areaRect = cropArea.getBoundingClientRect();
         
-        catBtnTxt.innerText = 'Uploading...';
+        cropX = (areaRect.width - displayW) / 2;
+        cropY = (areaRect.height - displayH) / 2;
         
-        try {
-          const formData = new FormData(); formData.append('image', base64Image);
-          const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
-          const data = await res.json();
-          if (!data.success) throw new Error("ImgBB Failed");
-          
-          tempUploadedImgUrl = data.data.url;
-          
-          document.getElementById('cat-preview-img').src = tempUploadedImgUrl;
-          document.getElementById('cat-preview-img').style.display = 'block';
-          document.getElementById('cat-placeholder-icon').style.display = 'none';
-          catBtnUpl.classList.add('has-image');
-          catBtnTxt.innerText = 'Change Image';
-        } catch (err) {
-          alert("Image upload failed.");
-          catBtnTxt.innerText = 'Retry Upload';
-        }
-        catBtnUpl.style.pointerEvents = 'auto';
-        catFileInput.value = '';
+        cropImgTarget.src = objectUrl;
+        updateCropTransform();
+
+        // Push Dark Room Layer
+        document.getElementById('modal-crop').classList.add('active');
+        pushModal('modal-crop');
+
+        btnTxt.innerText = tempUploadedImgUrl ? 'Change Image' : 'Upload Cover Image';
+        btnUpl.style.pointerEvents = 'auto';
+        catFileInput.value = ''; // reset
       };
+      tempImg.src = objectUrl;
     });
 
+    function updateCropTransform() {
+      const areaRect = cropArea.getBoundingClientRect();
+      const sqRect = cropSquare.getBoundingClientRect();
+      
+      const minX = sqRect.right - areaRect.left - (imgOrigW * cropScale);
+      const maxX = sqRect.left - areaRect.left;
+      
+      const minY = sqRect.bottom - areaRect.top - (imgOrigH * cropScale);
+      const maxY = sqRect.top - areaRect.top;
+      
+      if(cropX > maxX) cropX = maxX;
+      if(cropX < minX) cropX = minX;
+      if(cropY > maxY) cropY = maxY;
+      if(cropY < minY) cropY = minY;
+
+      cropImgTarget.style.transform = `translate(${cropX}px, ${cropY}px) scale(${cropScale})`;
+    }
+
+    // Drag Logic
+    const onStart = (e) => {
+      isDragging = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      startX = clientX - cropX;
+      startY = clientY - cropY;
+    };
+    const onMove = (e) => {
+      if(!isDragging) return;
+      e.preventDefault();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      cropX = clientX - startX;
+      cropY = clientY - startY;
+      updateCropTransform();
+    };
+    const onEnd = () => { isDragging = false; };
+    
+    cropArea.addEventListener('mousedown', onStart);
+    cropArea.addEventListener('touchstart', onStart, {passive: false});
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, {passive: false});
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchend', onEnd);
+
+    // Confirm Crop -> Canvas -> ImgBB
+    document.getElementById('btn-crop-confirm').onclick = async () => {
+      if (navigator.vibrate) navigator.vibrate(15);
+      const btn = document.getElementById('btn-crop-confirm');
+      btn.innerText = 'Processing...';
+      btn.style.pointerEvents = 'none';
+
+      const sqRect = cropSquare.getBoundingClientRect();
+      const areaRect = cropArea.getBoundingClientRect();
+      
+      const sqX = sqRect.left - areaRect.left;
+      const sqY = sqRect.top - areaRect.top;
+      
+      const sourceX = (sqX - cropX) / cropScale;
+      const sourceY = (sqY - cropY) / cropScale;
+      const sourceSize = squareSize / cropScale;
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = 800; canvas.height = 800;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(cropImgTarget, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 800, 800);
+      
+      const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+      
+      btn.innerText = 'Uploading...';
+      
+      try {
+        const formData = new FormData(); formData.append('image', base64Image);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!data.success) throw new Error("ImgBB Failed");
+        
+        tempUploadedImgUrl = data.data.url;
+        updateCatPreviewUI();
+        
+        history.back(); // close modal-crop
+      } catch (err) {
+        alert("Image upload failed.");
+      }
+      btn.innerText = 'Confirm Crop';
+      btn.style.pointerEvents = 'auto';
+    };
+
+    // --- 6. Category Saves & Deletes ---
     document.getElementById('btn-save-cat').onclick = async () => {
       const name = document.getElementById('cat-name-input').value.trim();
       if (!name) return alert("Please enter a category name.");
@@ -649,14 +784,10 @@
       btn.innerText = 'Saving...'; btn.style.pointerEvents = 'none';
 
       if (activeContext.catId) {
-        // Edit existing
         const cat = currentLayoutData.categories.find(c => c.id === activeContext.catId);
         cat.name = name; cat.image = tempUploadedImgUrl;
       } else {
-        // Create new
-        currentLayoutData.categories.push({
-          id: Date.now(), name: name, image: tempUploadedImgUrl, slots: {}
-        });
+        currentLayoutData.categories.push({ id: Date.now(), name: name, image: tempUploadedImgUrl, slots: {} });
       }
 
       await saveMasterLayout();
@@ -665,9 +796,7 @@
       if (navigator.vibrate) navigator.vibrate(20);
       
       history.back(); // close settings sheet
-      if (activeContext.catId) {
-        document.getElementById('cat-modal-title').innerText = name; // Update title live if in manager
-      }
+      if (activeContext.catId) document.getElementById('cat-modal-title').innerText = name;
     };
 
     document.getElementById('btn-req-delete-cat').onclick = () => {
@@ -686,7 +815,7 @@
       history.back(); // close cat manager (return to dash)
     };
 
-    // --- 5. Slot Assignment Modals (Shared for Hero & Category) ---
+    // --- 7. Slot Assignment Modals (Shared for Hero & Category) ---
     function openSlotOptions(product) {
       document.getElementById('slot-options-title').innerText = `Slot #${activeContext.slotIndex}`;
       document.getElementById('slot-preview-content').innerHTML = `
@@ -703,11 +832,9 @@
 
     document.getElementById('btn-slot-change').onclick = () => {
       if (navigator.vibrate) navigator.vibrate(15);
-      // Clean swap from bottom sheet to full screen search without triggering back navigation
       document.getElementById('sheet-slot-options').classList.remove('active');
       document.getElementById('overlay-shared').classList.remove('active');
       modalStack.pop(); history.replaceState({ modal: 'modal-search' }, ''); modalStack.push('modal-search');
-      
       openInventorySearch();
     };
 
@@ -725,7 +852,7 @@
       history.back(); // close options sheet
     };
 
-    // --- 6. Inventory Search Engine ---
+    // --- 8. Inventory Search Engine ---
     let invSearchDebounce;
     function openInventorySearch() {
       document.getElementById('search-title').innerText = `Assign to Slot #${activeContext.slotIndex}`;
@@ -766,7 +893,7 @@
 
         snap.docs.forEach(docSnap => {
           const prod = { id: docSnap.id, ...docSnap.data() };
-          productCache[prod.id] = prod; // cache it instantly
+          productCache[prod.id] = prod; 
           
           const row = document.createElement('div');
           row.className = 'inventory-item';
@@ -783,7 +910,7 @@
             const btn = row.querySelector('.btn-select');
             btn.innerHTML = '...'; btn.style.opacity = '0.7';
             await assignProductToSlot(prod.id);
-            history.back(); // close search modal
+            history.back(); 
           };
           container.appendChild(row);
         });
@@ -792,7 +919,7 @@
       }
     }
 
-    // --- 7. The Core Assignment Logic ---
+    // --- 9. Core Assignment Logic ---
     async function assignProductToSlot(productId) {
       if (activeContext.type === 'hero') {
         currentLayoutData.slots[activeContext.slotIndex] = productId;
@@ -804,7 +931,6 @@
       
       await saveMasterLayout();
       
-      // Live UI Update depending on what is open
       if (activeContext.type === 'hero') renderGenericSlotFeed('hero-slots-list', 16, currentLayoutData.slots, 'hero');
       if (activeContext.type === 'category') {
         const cat = currentLayoutData.categories.find(c => c.id === activeContext.catId);
