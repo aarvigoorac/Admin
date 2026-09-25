@@ -45,6 +45,16 @@
     .page-container { width: 100%; max-width: 900px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 120px; }
     .page-header { font-size: 26px; font-weight: 800; padding: 12px 0 0 0; color: var(--text-main); letter-spacing: -0.5px; }
 
+    /* Promo Banners Dashboard UI */
+    .banners-scroll { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 8px; scroll-snap-type: x mandatory; }
+    .banner-card { flex: 0 0 240px; aspect-ratio: 16/7; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; color: white; cursor: pointer; scroll-snap-align: start; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.15s; position: relative; overflow: hidden; }
+    .banner-card::after { content: ''; position: absolute; top: -50%; right: -20%; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+    .banner-card:active { transform: scale(0.96); }
+    .banner-title { font-size: 16px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; letter-spacing: -0.3px; }
+    .banner-sub { font-size: 12px; font-weight: 600; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; }
+    .banner-add { background: var(--surface-color); border: 2px dashed var(--border); color: var(--text-sub); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; font-weight: 700; font-size: 14px; box-shadow: none; }
+    .banner-add svg { width: 24px; height: 24px; }
+
     /* Dashboard: Hero Section */
     .hero-manager-card { background: linear-gradient(135deg, var(--surface-color), var(--bg-color)); border-radius: 20px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
     .hero-manager-card:active { transform: scale(0.97); }
@@ -60,10 +70,13 @@
     
     .cat-card { background: var(--surface-color); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.15s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
     .cat-card:active { transform: scale(0.96); }
-    .cat-img-wrap { width: 100%; aspect-ratio: 16/9; background: var(--bg-color); position: relative; border-bottom: 1px solid var(--border); }
-    .cat-img { width: 100%; height: 100%; object-fit: cover; }
-    .cat-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--border); }
+    
+    /* CRITICAL FIX: Absolute positioning forces exact uniform layout regardless of image dimensions */
+    .cat-img-wrap { width: 100%; aspect-ratio: 16/9; background: var(--bg-color); position: relative; border-bottom: 1px solid var(--border); overflow: hidden; }
+    .cat-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+    .cat-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--border); }
     .cat-placeholder svg { width: 40px; height: 40px; }
+    
     .cat-details { padding: 16px; display: flex; flex-direction: column; gap: 4px; }
     .cat-name { font-size: 15px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cat-meta { font-size: 12px; font-weight: 700; color: var(--text-sub); }
@@ -88,7 +101,7 @@
 
     .fs-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; max-width: 900px; margin: 0 auto; width: 100%; }
 
-    /* Slot Feed Rows (Reused for both 16 and 10 slot managers) */
+    /* Slot Feed Rows (Reused for both 16 and 30 slot managers) */
     .slot-card { background: var(--surface-color); border-radius: 16px; padding: 12px 16px; border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; user-select: none; }
     .slot-card:active { transform: scale(0.97); background: var(--bg-color); }
     .slot-number { font-size: 14px; font-weight: 800; color: var(--text-sub); width: 28px; text-align: center; flex-shrink: 0; background: var(--bg-color); padding: 4px; border-radius: 6px; border: 1px solid var(--border); }
@@ -116,6 +129,25 @@
     .sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; position: sticky; top: 0; z-index: 10; }
     .sheet-title { font-size: 18px; font-weight: 800; }
     .sheet-scroll { padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; padding-bottom: 40px; }
+
+    /* Banners Settings specific */
+    .banner-preview-box { width: 100%; aspect-ratio: 21/9; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); position: relative; overflow: hidden; transition: background 0.3s ease; }
+    .banner-preview-box::after { content: ''; position: absolute; top: -50%; right: -20%; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: none; }
+    .preview-heading { font-size: 22px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.5px; z-index: 1; }
+    .preview-sub { font-size: 13px; font-weight: 500; opacity: 0.9; z-index: 1; }
+    
+    .swatches { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+    .swatches::-webkit-scrollbar { display: none; }
+    .swatch { width: 44px; height: 44px; border-radius: 50%; cursor: pointer; border: 2.5px solid transparent; transition: transform 0.2s, border-color 0.2s; flex-shrink: 0; }
+    .swatch.active { border-color: var(--text-main); transform: scale(1.1); box-shadow: 0 0 0 3px var(--bg-color) inset; }
+    
+    /* 6 Premium Gradients */
+    .grad-0 { background: linear-gradient(135deg, #2874f0, #1e5bb8); } /* Brand Blue */
+    .grad-1 { background: linear-gradient(135deg, #FF8008, #FFC837); } /* Sunset */
+    .grad-2 { background: linear-gradient(135deg, #11998e, #38ef7d); } /* Emerald */
+    .grad-3 { background: linear-gradient(135deg, #8E2DE2, #4A00E0); } /* Purple */
+    .grad-4 { background: linear-gradient(135deg, #ee0979, #ff6a00); } /* Pink-Orange */
+    .grad-5 { background: linear-gradient(135deg, #1f1c2c, #928dab); } /* Dark Midnight */
 
     /* Category Settings Sheet specific */
     .media-engine { display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--surface-color); padding: 20px; border-radius: 20px; border: 1px solid var(--border); }
@@ -173,7 +205,6 @@
     .crop-editor-mode { --bg-color: #000000; --surface-color: #1a1a1a; --border: #333333; --text-main: #ffffff; }
     .crop-area { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000000; touch-action: none; width: 100%; }
     
-    /* ADDED top: 0; left: 0; to fix the flexbox center offset bug */
     #crop-target-img { position: absolute; top: 0; left: 0; transform-origin: top left; will-change: transform; cursor: grab; }
     #crop-target-img:active { cursor: grabbing; }
     
@@ -196,6 +227,14 @@
   <div class="page-container" id="dashboard-view">
     <div class="page-header">Layout Manager</div>
     
+    <!-- Promo Banners Section -->
+    <div>
+      <div class="section-header">Promo Banners <span id="dash-banner-count" style="font-size:13px; color:var(--text-sub); font-weight:700;">0/6</span></div>
+      <div class="banners-scroll" id="dash-banners-list">
+        <!-- Rendered dynamically via JS -->
+      </div>
+    </div>
+
     <!-- Hero Trigger -->
     <div class="hero-manager-card" id="btn-open-hero">
       <div class="hero-manager-info">
@@ -235,7 +274,7 @@
     </div>
   </div>
 
-  <!-- Level 1B: Category 10-Slot Manager (Full Screen) -->
+  <!-- Level 1B: Category 30-Slot Manager (Full Screen) -->
   <div class="fs-modal" id="modal-cat-manager" style="z-index: 1000;">
     <div class="fs-header">
       <div class="fs-header-left">
@@ -255,7 +294,50 @@
   <!-- Shared Overlays for Modals Layers 2 to 5 -->
   <div class="modal-overlay" id="overlay-shared" style="z-index: 1999;"></div>
 
-  <!-- Level 2A: Category Settings (Bottom Sheet) -->
+  <!-- Level 2A: Banner Settings (Bottom Sheet) -->
+  <div class="bottom-sheet" id="sheet-banner-settings" style="z-index: 2000;">
+    <div class="sheet-header">
+      <div class="sheet-title" id="banner-settings-title">Banner Settings</div>
+      <button class="btn-icon" id="btn-close-banner-settings"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+    </div>
+    <div class="sheet-scroll">
+      <!-- Live Preview -->
+      <div class="banner-preview-box grad-0" id="banner-live-preview">
+        <div class="preview-heading" id="preview-heading">Heading Preview</div>
+        <div class="preview-sub" id="preview-sub">Sub-text Preview</div>
+      </div>
+
+      <div class="modern-input-group">
+        <div class="modern-label">Gradient Theme</div>
+        <div class="swatches">
+          <div class="swatch grad-0 active" onclick="selectGrad(0)"></div>
+          <div class="swatch grad-1" onclick="selectGrad(1)"></div>
+          <div class="swatch grad-2" onclick="selectGrad(2)"></div>
+          <div class="swatch grad-3" onclick="selectGrad(3)"></div>
+          <div class="swatch grad-4" onclick="selectGrad(4)"></div>
+          <div class="swatch grad-5" onclick="selectGrad(5)"></div>
+        </div>
+      </div>
+
+      <div class="modern-input-group" style="margin-top: 8px;">
+        <div class="modern-label">Heading</div>
+        <input type="text" id="banner-heading-input" class="modern-input" placeholder="e.g., Aarvi Stores" maxlength="24">
+      </div>
+      
+      <div class="modern-input-group">
+        <div class="modern-label">Footer / Sub-text</div>
+        <input type="text" id="banner-sub-input" class="modern-input" placeholder="e.g., Premium quality, delivered fast." maxlength="40">
+      </div>
+
+      <button class="btn-master-save" id="btn-save-banner" style="margin-top: 8px;">Save Banner</button>
+
+      <div class="danger-zone" id="banner-danger-zone" style="display:none;">
+        <button class="btn-danger-ghost" id="btn-req-delete-banner">Delete Banner</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level 2B: Category Settings (Bottom Sheet) -->
   <div class="bottom-sheet" id="sheet-cat-settings" style="z-index: 2000;">
     <div class="sheet-header">
       <div class="sheet-title" id="cat-settings-title">Category Settings</div>
@@ -289,7 +371,7 @@
     </div>
   </div>
 
-  <!-- Level 2B: Slot Options (Bottom Sheet) -->
+  <!-- Level 2C: Slot Options (Bottom Sheet) -->
   <div class="bottom-sheet" id="sheet-slot-options" style="z-index: 2000;">
     <div class="sheet-header">
       <div class="sheet-title" id="slot-options-title">Slot Options</div>
@@ -343,6 +425,18 @@
     </div>
   </div>
 
+  <!-- Level 4C: Dialog Confirm Delete Banner -->
+  <div class="modal-overlay" id="overlay-dialog-banner" style="z-index: 2999;"></div>
+  <div class="dialog-box" id="dialog-delete-banner" style="z-index: 3000;">
+    <div class="dialog-icon"><svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg></div>
+    <div class="dialog-title">Delete Banner?</div>
+    <div class="dialog-desc">This action cannot be undone. This promo banner will be instantly removed from the homepage slider.</div>
+    <div class="dialog-actions">
+      <button class="btn-dialog cancel" id="btn-cancel-delete-banner">Cancel</button>
+      <button class="btn-dialog confirm" id="btn-confirm-delete-banner">Yes, Delete</button>
+    </div>
+  </div>
+
   <!-- Level 5: Professional Crop Image Dark Room -->
   <div class="fs-modal crop-editor-mode" id="modal-crop" style="z-index: 2500;">
     <div class="fs-header" style="background: rgba(0,0,0,0.85); border-bottom: 1px solid #222;">
@@ -373,15 +467,16 @@
     const catPlaceholderSVG = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>`;
 
     // Core Data State
-    let currentLayoutData = { slots: {}, categories: [] };
+    let currentLayoutData = { slots: {}, categories: [], banners: [] };
     let productCache = {};
     let modalStack = [];
     
     // Edit Context Routing Engine
-    let activeContext = { type: null, catId: null, slotIndex: null };
+    let activeContext = { type: null, catId: null, bannerId: null, slotIndex: null };
     
-    // Category Upload State
+    // Category & Banner State
     let tempUploadedImgUrl = '';
+    let currentBannerTheme = 0;
 
     const getProductImage = (prod) => {
       if (prod.images && prod.images.thumbnail) return prod.images.thumbnail;
@@ -400,6 +495,7 @@
           const data = layoutSnap.data();
           currentLayoutData.slots = data.slots || {};
           currentLayoutData.categories = data.categories || [];
+          currentLayoutData.banners = data.banners || [];
         }
         await preloadRequiredProducts();
         renderDashboard();
@@ -412,7 +508,7 @@
       const ids = new Set();
       for (let i = 1; i <= 16; i++) if (currentLayoutData.slots[i]) ids.add(currentLayoutData.slots[i]);
       currentLayoutData.categories.forEach(cat => {
-        if(cat.slots) for (let i = 1; i <= 10; i++) if (cat.slots[i]) ids.add(cat.slots[i]);
+        if(cat.slots) for (let i = 1; i <= 30; i++) if (cat.slots[i]) ids.add(cat.slots[i]);
       });
 
       const fetchIds = Array.from(ids).filter(id => !productCache[id]);
@@ -430,6 +526,7 @@
         await setDoc(doc(db, "layout", "homepage"), {
           slots: currentLayoutData.slots,
           categories: currentLayoutData.categories,
+          banners: currentLayoutData.banners,
           updatedAt: new Date().toISOString()
         }, { merge: true });
         renderDashboard(); 
@@ -441,10 +538,31 @@
     }
 
     function renderDashboard() {
+      // Banners Render
+      document.getElementById('dash-banner-count').innerText = `${currentLayoutData.banners.length}/6`;
+      const bannersList = document.getElementById('dash-banners-list');
+      bannersList.innerHTML = '';
+      currentLayoutData.banners.forEach(b => {
+        const bCard = document.createElement('div');
+        bCard.className = `banner-card grad-${b.theme || 0}`;
+        bCard.innerHTML = `<div class="banner-title">${b.heading}</div><div class="banner-sub">${b.subtext}</div>`;
+        bCard.onclick = () => { if (navigator.vibrate) navigator.vibrate(15); openBannerSettings(b); };
+        bannersList.appendChild(bCard);
+      });
+      if(currentLayoutData.banners.length < 6) {
+        const addCard = document.createElement('div');
+        addCard.className = 'banner-card banner-add';
+        addCard.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg> Add Banner`;
+        addCard.onclick = () => { if (navigator.vibrate) navigator.vibrate(15); openBannerSettings(null); };
+        bannersList.appendChild(addCard);
+      }
+
+      // Hero Render
       let heroFilled = 0;
       for (let i = 1; i <= 16; i++) if (currentLayoutData.slots[i]) heroFilled++;
       document.getElementById('dash-hero-badge').innerText = `${heroFilled}/16 Live`;
 
+      // Categories Render
       const grid = document.getElementById('dash-categories-grid');
       grid.innerHTML = '';
 
@@ -454,7 +572,7 @@
 
       currentLayoutData.categories.forEach(cat => {
         let catFilled = 0;
-        if(cat.slots) { for (let i = 1; i <= 10; i++) if (cat.slots[i]) catFilled++; }
+        if(cat.slots) { for (let i = 1; i <= 30; i++) if (cat.slots[i]) catFilled++; }
         
         const card = document.createElement('div');
         card.className = 'cat-card';
@@ -464,7 +582,7 @@
           </div>
           <div class="cat-details">
             <div class="cat-name">${cat.name}</div>
-            <div class="cat-meta">${catFilled}/10 Slots Filled</div>
+            <div class="cat-meta">${catFilled}/30 Slots Filled</div>
           </div>
         `;
         card.onclick = () => {
@@ -483,11 +601,12 @@
 
     function popModal(idToClose) {
       document.getElementById(idToClose).classList.remove('active');
-      if (idToClose === 'sheet-cat-settings' || idToClose === 'sheet-slot-options') {
+      if (idToClose === 'sheet-cat-settings' || idToClose === 'sheet-slot-options' || idToClose === 'sheet-banner-settings') {
         document.getElementById('overlay-shared').classList.remove('active');
       }
       if (idToClose === 'dialog-clear-slot') document.getElementById('overlay-dialog-slot').classList.remove('active');
       if (idToClose === 'dialog-delete-cat') document.getElementById('overlay-dialog-cat').classList.remove('active');
+      if (idToClose === 'dialog-delete-banner') document.getElementById('overlay-dialog-banner').classList.remove('active');
     }
 
     window.addEventListener('popstate', () => {
@@ -512,10 +631,92 @@
     bindClose('btn-cancel-clear-slot', 'dialog-clear-slot');
     bindClose('btn-cancel-delete-cat', 'dialog-delete-cat');
     bindClose('btn-close-crop', 'modal-crop');
+    bindClose('btn-close-banner-settings', 'sheet-banner-settings');
+    bindClose('btn-cancel-delete-banner', 'dialog-delete-banner');
     
     document.getElementById('overlay-shared').addEventListener('click', () => { if (modalStack.length > 0) history.back(); });
     document.getElementById('overlay-dialog-slot').addEventListener('click', () => { if (modalStack.length > 0) history.back(); });
     document.getElementById('overlay-dialog-cat').addEventListener('click', () => { if (modalStack.length > 0) history.back(); });
+    document.getElementById('overlay-dialog-banner').addEventListener('click', () => { if (modalStack.length > 0) history.back(); });
+
+    // --- 2.5 Promo Banners Settings ---
+    window.selectGrad = (index) => {
+      if (navigator.vibrate) navigator.vibrate(10);
+      currentBannerTheme = index;
+      document.querySelectorAll('.swatch').forEach((el, i) => {
+        el.classList.toggle('active', i === index);
+      });
+      document.getElementById('banner-live-preview').className = `banner-preview-box grad-${index}`;
+    };
+
+    document.getElementById('banner-heading-input').addEventListener('input', (e) => {
+      document.getElementById('preview-heading').innerText = e.target.value || 'Heading Preview';
+    });
+    document.getElementById('banner-sub-input').addEventListener('input', (e) => {
+      document.getElementById('preview-sub').innerText = e.target.value || 'Sub-text Preview';
+    });
+
+    function openBannerSettings(bannerObj) {
+      const isNew = !bannerObj;
+      activeContext = { type: 'banner', bannerId: isNew ? null : bannerObj.id, catId: null, slotIndex: null };
+      
+      document.getElementById('banner-settings-title').innerText = isNew ? 'Add Banner' : 'Edit Banner';
+      
+      const headInput = document.getElementById('banner-heading-input');
+      const subInput = document.getElementById('banner-sub-input');
+      headInput.value = isNew ? '' : bannerObj.heading;
+      subInput.value = isNew ? '' : bannerObj.subtext;
+      
+      document.getElementById('preview-heading').innerText = headInput.value || 'Heading Preview';
+      document.getElementById('preview-sub').innerText = subInput.value || 'Sub-text Preview';
+      
+      selectGrad(isNew ? 0 : (bannerObj.theme || 0));
+
+      const dz = document.getElementById('banner-danger-zone');
+      dz.style.display = isNew ? 'none' : 'block';
+
+      document.getElementById('overlay-shared').classList.add('active');
+      document.getElementById('sheet-banner-settings').classList.add('active');
+      pushModal('sheet-banner-settings');
+    }
+
+    document.getElementById('btn-save-banner').onclick = async () => {
+      const heading = document.getElementById('banner-heading-input').value.trim();
+      const sub = document.getElementById('banner-sub-input').value.trim();
+      if (!heading) return alert("Heading is required.");
+      
+      const btn = document.getElementById('btn-save-banner');
+      btn.innerText = 'Saving...'; btn.style.pointerEvents = 'none';
+
+      if (activeContext.bannerId) {
+        const b = currentLayoutData.banners.find(x => x.id === activeContext.bannerId);
+        b.heading = heading; b.subtext = sub; b.theme = currentBannerTheme;
+      } else {
+        if (!currentLayoutData.banners) currentLayoutData.banners = [];
+        currentLayoutData.banners.push({ id: Date.now(), heading: heading, subtext: sub, theme: currentBannerTheme });
+      }
+
+      await saveMasterLayout();
+      
+      btn.innerText = 'Save Banner'; btn.style.pointerEvents = 'auto';
+      if (navigator.vibrate) navigator.vibrate(20);
+      history.back(); 
+    };
+
+    document.getElementById('btn-req-delete-banner').onclick = () => {
+      if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+      document.getElementById('overlay-dialog-banner').classList.add('active');
+      document.getElementById('dialog-delete-banner').classList.add('active');
+      pushModal('dialog-delete-banner');
+    };
+
+    document.getElementById('btn-confirm-delete-banner').onclick = async () => {
+      currentLayoutData.banners = currentLayoutData.banners.filter(x => x.id !== activeContext.bannerId);
+      await saveMasterLayout();
+      if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+      history.back(); 
+      history.back(); 
+    };
 
     // --- 3. View Renderers ---
     function renderGenericSlotFeed(containerId, totalSlots, dataSourceObj, contextType, parentCatId = null) {
@@ -574,7 +775,7 @@
       if (!cat) return;
       
       document.getElementById('cat-modal-title').innerText = cat.name;
-      renderGenericSlotFeed('cat-slots-list', 10, cat.slots || {}, 'category', cat.id);
+      renderGenericSlotFeed('cat-slots-list', 30, cat.slots || {}, 'category', cat.id);
       
       document.getElementById('btn-open-cat-settings').onclick = () => {
         if (navigator.vibrate) navigator.vibrate(15);
@@ -948,7 +1149,7 @@
       if (activeContext.type === 'hero') renderGenericSlotFeed('hero-slots-list', 16, currentLayoutData.slots, 'hero');
       if (activeContext.type === 'category') {
         const cat = currentLayoutData.categories.find(c => c.id === activeContext.catId);
-        renderGenericSlotFeed('cat-slots-list', 10, cat.slots, 'category', cat.id);
+        renderGenericSlotFeed('cat-slots-list', 30, cat.slots, 'category', cat.id);
       }
     }
   </script>
