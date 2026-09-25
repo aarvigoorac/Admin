@@ -4,8 +4,8 @@
   "description": "Order and Inventory Management System for Aarvi Stores",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f1f3f6",
-  "theme_color": "#ffffff",
+  "background_color": "#121212",
+  "theme_color": "#121212",
   "orientation": "portrait-primary",
   "icons": [
     {
