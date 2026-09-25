@@ -78,7 +78,7 @@
     
     .oc-body { display: flex; justify-content: space-between; align-items: center; }
     .img-stack { display: flex; align-items: center; }
-    .img-circle { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-color); border: 2px solid var(--surface-color); margin-left: -12px; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: transform 0.2s ease; }
+    .img-circle { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-color); border: 2px solid var(--surface-color); margin-left: -12px; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: transform 0.2s ease; cursor: pointer; }
     .img-circle:first-child { margin-left: 0; }
     .order-card:hover .img-circle { transform: translateX(4px); }
     .img-circle img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
@@ -165,6 +165,26 @@
     .btn-dialog.confirm { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     .btn-dialog.confirm.danger { background: var(--warning); }
 
+    /* New Styles for Partial Rejections & Image Viewer */
+    .btn-inline-action { font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; border: none; transition: transform 0.15s, opacity 0.2s; white-space: nowrap; }
+    .btn-inline-action:active { transform: scale(0.95); }
+    .btn-inline-reject { background: var(--st-rejected-bg); color: var(--st-rejected); }
+    .btn-inline-undo { background: var(--st-assigned-bg); color: var(--st-assigned); }
+
+    .item-row { display: flex; gap: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 12px; transition: opacity 0.3s ease; }
+    .item-row.rejected { opacity: 0.6; }
+    .item-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+    .reason-box-container { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; animation: fadeIn 0.3s ease; }
+    .reason-input { width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--warning); background: var(--surface-color); color: var(--text-main); font-size: 14px; outline: none; resize: vertical; min-height: 80px; }
+    .reason-input:focus { box-shadow: 0 0 0 4px rgba(179, 38, 30, 0.1); }
+
+    /* Layer 4: Fullscreen Image Viewer */
+    .image-viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 4000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); }
+    .image-viewer.active { opacity: 1; pointer-events: auto; }
+    .image-viewer img { max-width: 90%; max-height: 85%; object-fit: contain; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .image-viewer.active img { transform: scale(1); }
+    .btn-close-img { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 24px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -245,9 +265,15 @@
     </div>
   </div>
 
+  <!-- Layer 4: Image Viewer -->
+  <div class="image-viewer" id="modal-img">
+    <button class="btn-close-img" id="btn-close-img">&times;</button>
+    <img id="full-img" src="" alt="Full Screen">
+  </div>
+
   <script type="module">
     import { auth, db } from '../config.js';
-    import { collection, query, where, orderBy, limit, startAfter, onSnapshot, getDocs, getDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, query, where, orderBy, limit, startAfter, onSnapshot, getDocs, getDoc, doc, updateDoc, deleteDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const RENDER_API_URL = 'https://backend-ayvz.onrender.com/api/approve-zoho-order';
@@ -280,6 +306,11 @@
     const dialogDesc = document.getElementById('dialog-desc');
     const btnDialogCancel = document.getElementById('btn-dialog-cancel');
     const btnDialogConfirm = document.getElementById('btn-dialog-confirm');
+
+    // Layer 4 Image Viewer Elements
+    const modalImg = document.getElementById('modal-img');
+    const fullImg = document.getElementById('full-img');
+    const btnCloseImg = document.getElementById('btn-close-img');
 
     // State
     let currentAdminToken = null;
@@ -388,10 +419,11 @@
         order.id = docSnap.id;
         
         let imgs = '';
-        order.items.slice(0, 3).forEach(item => imgs += `<div class="img-circle"><img src="${item.image || 'placeholder.png'}"></div>`);
-        if (order.items.length > 3) imgs += `<div class="img-circle img-more">+${order.items.length - 3}</div>`;
+        const approvedItems = order.items || [];
+        approvedItems.slice(0, 3).forEach(item => imgs += `<div class="img-circle" onclick="event.stopPropagation(); window.openImageViewer('${item.image || 'placeholder.png'}')"><img src="${item.image || 'placeholder.png'}"></div>`);
+        if (approvedItems.length > 3) imgs += `<div class="img-circle img-more">+${approvedItems.length - 3}</div>`;
 
-        const totalQty = order.items.reduce((sum, i) => sum + (i.qty || 1), 0);
+        const totalQty = approvedItems.reduce((sum, i) => sum + (i.qty || 1), 0);
         const theme = getStatusTheme(order.status);
         
         const billedBadge = order.zoho_invoice_id 
@@ -435,7 +467,74 @@
       debounceTimer = setTimeout(() => { val.length > 0 ? fetchSingleOrder(val) : fetchOrdersByDate(datePicker.value); }, 500);
     });
 
-    // --- Modal Navigation ---
+    // --- Modal Navigation & Transactions ---
+
+    window.openImageViewer = (src) => {
+      fullImg.src = src;
+      modalImg.classList.add('active');
+      modalStack.push('L4');
+      history.pushState({ modal: 'L4' }, '');
+    };
+
+    window.toggleItemRejection = async (itemIndex, isRejecting) => {
+      if (!activeOrderData || activeOrderData.zoho_invoice_id) return;
+      if (navigator.vibrate) navigator.vibrate([10, 20]);
+      
+      const orderRef = doc(db, 'orders', activeOrderData.id);
+      try {
+        await runTransaction(db, async (transaction) => {
+          const docSnap = await transaction.get(orderRef);
+          if (!docSnap.exists()) throw "Document missing!";
+          const data = docSnap.data();
+          
+          let items = data.items || [];
+          let rejectedItems = data.rejectedItems || [];
+          
+          if (isRejecting) {
+            const removed = items.splice(itemIndex, 1)[0];
+            if (removed) rejectedItems.push(removed);
+          } else {
+            const restored = rejectedItems.splice(itemIndex, 1)[0];
+            if (restored) items.push(restored);
+          }
+          
+          const newSubTotal = items.reduce((acc, i) => acc + ((i.price || 0) * (i.qty || 1)), 0);
+          const fee = data.deliveryFee || 0;
+          const newTotal = newSubTotal + fee;
+          
+          let updateData = { items, rejectedItems, subTotal: newSubTotal, totalAmount: newTotal };
+          
+          // Clear reason if no items rejected
+          if (rejectedItems.length === 0 && data.rejectionReason) {
+            updateData.rejectionReason = null;
+          }
+          
+          transaction.update(orderRef, updateData);
+        });
+        refreshCurrentOrder();
+      } catch(err) {
+        console.error(err);
+        alert("Transaction failed: " + err);
+      }
+    };
+
+    window.saveRejectionReason = async () => {
+      const input = document.getElementById('rejection-reason-input');
+      const val = input.value.trim();
+      if(val.length < 4) return;
+      
+      const btn = document.getElementById('save-reason-btn');
+      btn.innerText = "Saving...";
+      btn.disabled = true;
+      
+      try {
+        await updateDoc(doc(db, 'orders', activeOrderData.id), { rejectionReason: val, updatedAt: new Date().toISOString() });
+        btn.innerText = "Saved";
+        btn.style.background = "var(--st-delivered)";
+        setTimeout(() => refreshCurrentOrder(), 800);
+      } catch(e) { console.error(e); btn.innerText = "Save Failed"; btn.disabled = false; }
+    };
+
     function openLayer1(order) {
       activeOrderData = order;
       renderLayer1(order);
@@ -496,14 +595,15 @@
 
     function closeTopLayer() {
       const top = modalStack.pop();
-      if (top === 'L3') { modalDialog.classList.remove('active'); overlayDialog.classList.remove('active'); pendingActionType = null; }
+      if (top === 'L4') { modalImg.classList.remove('active'); }
+      else if (top === 'L3') { modalDialog.classList.remove('active'); overlayDialog.classList.remove('active'); pendingActionType = null; }
       else if (top === 'L2') { modalL2.classList.remove('active'); overlayL2.classList.remove('active'); }
       else if (top === 'L1') { modalL1.classList.remove('active'); overlayL1.classList.remove('active'); activeOrderData = null; }
     }
 
     window.addEventListener('popstate', () => { if (modalStack.length > 0) closeTopLayer(); });
     
-    ['close-l1', 'overlay-l1', 'close-l2', 'overlay-l2', 'btn-dialog-cancel', 'overlay-dialog'].forEach(id => {
+    ['close-l1', 'overlay-l1', 'close-l2', 'overlay-l2', 'btn-dialog-cancel', 'overlay-dialog', 'btn-close-img'].forEach(id => {
       document.getElementById(id).addEventListener('click', () => { 
         if (navigator.vibrate) navigator.vibrate(10);
         if(modalStack.length > 0) history.back(); 
@@ -561,12 +661,12 @@
       }
     });
 
-
     // --- Layer 1 Render ---
     function renderLayer1(order) {
       document.getElementById('m1-title').innerText = order.id;
       const isRejected = order.status === 'rejected';
       const isApproved = order.zoho_invoice_id || order.status === 'approved';
+      const lockActions = order.zoho_invoice_id; // lock partial edits if billed
 
       const statuses = ['processing', 'approved', 'assigned', 'out for delivery', 'delivered', 'rejected', 'cancelled'];
       let selectHtml = `<select class="status-picker" id="status-picker">`;
@@ -594,26 +694,60 @@
 
       let itemsHtml = '';
       let calcSubTotal = 0;
-      order.items.forEach(item => {
-        const itemTotal = item.price * (item.qty || 1);
-        calcSubTotal += itemTotal;
-        itemsHtml += `
-          <div style="display:flex; gap:12px; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:12px;">
-            <img src="${item.image || 'placeholder.png'}" style="width:60px; height:60px; object-fit:contain; border-radius:8px; background:var(--bg-color); padding:4px; flex-shrink:0;">
-            <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-              <div style="font-size:14px; font-weight:600; line-height:1.3; margin-bottom:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${item.name}</div>
-              <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-sub);">
-                <span>Qty: ${item.qty || 1}</span>
-                <span style="font-weight:700; color:var(--text-main);">₹${itemTotal.toLocaleString('en-IN')}</span>
+      
+      // Approved Items Generation
+      const currentItems = order.items || [];
+      if (currentItems.length > 0) {
+        currentItems.forEach((item, index) => {
+          const itemTotal = (item.price || 0) * (item.qty || 1);
+          calcSubTotal += itemTotal;
+          itemsHtml += `
+            <div class="item-row">
+              <img src="${item.image || 'placeholder.png'}" onclick="window.openImageViewer('${item.image || 'placeholder.png'}')" style="width:60px; height:60px; object-fit:contain; border-radius:8px; background:var(--bg-color); padding:4px; flex-shrink:0; cursor:pointer;">
+              <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                <div style="font-size:14px; font-weight:600; line-height:1.3; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${item.name}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:13px; color:var(--text-sub);">Qty: ${item.qty || 1}  •  <span style="font-weight:700; color:var(--text-main);">₹${itemTotal.toLocaleString('en-IN')}</span></span>
+                  ${!lockActions ? `<button class="btn-inline-action btn-inline-reject" onclick="window.toggleItemRejection(${index}, true)">Reject</button>` : ''}
+                </div>
               </div>
             </div>
+          `;
+        });
+      }
+
+      // Rejected Items Generation & Reason Block
+      const rejItems = order.rejectedItems || [];
+      if (rejItems.length > 0) {
+        itemsHtml += `<div class="db-title" style="margin-top:20px; color:var(--warning);">Rejected Items</div>`;
+        rejItems.forEach((item, index) => {
+          itemsHtml += `
+            <div class="item-row rejected">
+              <img src="${item.image || 'placeholder.png'}" style="width:60px; height:60px; object-fit:contain; border-radius:8px; background:var(--bg-color); padding:4px; flex-shrink:0; filter: grayscale(100%);">
+              <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                <div style="font-size:14px; font-weight:600; line-height:1.3; margin-bottom:6px; text-decoration: line-through;">${item.name}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:13px;">Qty: ${item.qty || 1}</span>
+                  ${!lockActions ? `<button class="btn-inline-action btn-inline-undo" onclick="window.toggleItemRejection(${index}, false)">Undo</button>` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        // Reason Box Appends at Bottom
+        itemsHtml += `
+          <div class="reason-box-container">
+            <textarea id="rejection-reason-input" class="reason-input" placeholder="Required: Reason for rejection (min 4 chars)...">${order.rejectionReason || ''}</textarea>
+            <button id="save-reason-btn" class="btn btn-assign" style="margin-top:0;" onclick="window.saveRejectionReason()" ${(!order.rejectionReason || order.rejectionReason.length < 4) ? 'disabled' : ''}>Save Reason</button>
           </div>
         `;
-      });
-      itemsHtml = itemsHtml.replace(/border-bottom:1px solid var\(--border\); padding-bottom:12px;"([^>]*)$/, '"$1'); 
-
+      }
+      
+      // Fallback calculation checking
       const subTotal = order.subTotal !== undefined ? order.subTotal : calcSubTotal;
       const fee = order.deliveryFee || 0;
+      const displayTotal = order.totalAmount !== undefined ? order.totalAmount : (subTotal + fee);
 
       const billStatusHtml = order.zoho_invoice_id 
         ? `<span style="color:var(--st-delivered); font-weight:800; display:flex; align-items:center; gap:4px;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg> Generated</span>`
@@ -629,13 +763,19 @@
           <div class="detail-row"><span>Zoho ERP</span>${billStatusHtml}</div>
           <div class="detail-row"><span>Subtotal</span><span>₹${subTotal.toLocaleString('en-IN')}</span></div>
           <div class="detail-row"><span>Delivery Fee</span><span style="color:${fee === 0 ? 'var(--st-delivered)' : 'inherit'}; font-weight:${fee === 0 ? '700' : 'normal'};">${fee === 0 ? 'FREE' : '₹' + fee}</span></div>
-          <div class="detail-row total"><span>Total</span><span>₹${order.totalAmount.toLocaleString('en-IN')}</span></div>
+          <div class="detail-row total"><span>Total</span><span>₹${displayTotal.toLocaleString('en-IN')}</span></div>
         </div>
       `;
 
+      if (rejItems.length > 0) {
+         const rInput = document.getElementById('rejection-reason-input');
+         const rBtn = document.getElementById('save-reason-btn');
+         rInput.addEventListener('input', (e) => { rBtn.disabled = e.target.value.trim().length < 4; });
+      }
+
       m1Actions.innerHTML = `
-        <button class="btn btn-reject" id="btn-reject" ${isApproved || isRejected ? 'disabled' : ''}>Reject</button>
-        <button class="btn btn-confirm" id="btn-confirm" ${isApproved || isRejected ? 'disabled' : ''}>${isApproved ? 'Approved' : 'Approve & Sync'}</button>
+        <button class="btn btn-reject" id="btn-reject" ${isApproved || isRejected || currentItems.length === 0 ? 'disabled' : ''}>Reject Order</button>
+        <button class="btn btn-confirm" id="btn-confirm" ${isApproved || isRejected || currentItems.length === 0 ? 'disabled' : ''}>${isApproved ? 'Approved' : 'Approve & Sync'}</button>
         <button class="btn btn-delete" id="btn-delete"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg></button>
       `;
 
