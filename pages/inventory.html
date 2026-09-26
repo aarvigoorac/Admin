@@ -60,20 +60,25 @@
     .clear-btn { position: absolute; right: 16px; background: var(--skeleton-base); border: none; width: 24px; height: 24px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; color: var(--text-sub); }
     .clear-btn svg { left: auto; position: static; width: 14px; height: 14px; stroke: currentColor; }
 
-    /* Inventory Feed */
-    .inventory-list { display: flex; flex-direction: column; gap: 12px; }
+    /* Inventory Feed - Redesigned Grid Layout */
+    .inventory-list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 600px) { .inventory-list { grid-template-columns: repeat(2, 1fr); } }
 
-    .inventory-item { background: var(--surface-color); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; user-select: none; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.03); }
+    .inventory-item { background: var(--surface-color); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: stretch; gap: 16px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; user-select: none; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.03); }
     .inventory-item:active { transform: scale(0.96); background: var(--bg-color); }
     
-    .inv-img { width: 70px; height: 70px; border-radius: 12px; background: var(--bg-color); object-fit: contain; border: 1px solid var(--border); padding: 4px; flex-shrink: 0; mix-blend-mode: multiply; }
+    .inv-img-wrap { width: 80px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px; flex-shrink: 0; }
+    .inv-img { width: 100%; aspect-ratio: 1; border-radius: 12px; background: var(--bg-color); object-fit: contain; border: 1px solid var(--border); padding: 4px; mix-blend-mode: multiply; }
     @media (prefers-color-scheme: dark) { .inv-img { mix-blend-mode: normal; } }
+    .inv-brand-tag { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; letter-spacing: 0.5px; }
     
-    .inv-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; justify-content: center; }
-    .inv-name { font-size: 15px; font-weight: 800; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; color: var(--text-main); }
-    .inv-meta { font-size: 14px; font-weight: 700; color: var(--text-sub); display: flex; gap: 16px; align-items: center; }
-    .inv-price { color: var(--primary); font-weight: 800; font-size: 16px; }
-    .inv-stock { background: var(--success-bg); color: var(--success); padding: 2px 8px; border-radius: 4px; font-size: 12px; border: 1px solid var(--success); }
+    .inv-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+    .inv-name { font-size: 14px; font-weight: 800; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; color: var(--text-main); margin-bottom: 8px; }
+    
+    .inv-meta { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: auto; }
+    .inv-price { color: var(--primary); font-weight: 800; font-size: 18px; }
+    
+    .inv-stock { background: var(--success-bg); color: var(--success); padding: 4px 10px; border-radius: 8px; font-size: 12px; border: 1.5px solid var(--success); font-weight: 800; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
     .inv-stock.low { background: var(--warning-bg); color: var(--warning); border-color: var(--warning); }
     .inv-stock.zero { background: var(--skeleton-base); color: var(--text-sub); border-color: var(--border); }
 
@@ -81,11 +86,11 @@
     .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important; background-size: 200% 100% !important; animation: shimmer 1.5s infinite !important; border-radius: 6px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-    .loading-more { display: none; text-align: center; padding: 20px 10px; color: var(--text-sub); font-size: 14px; font-weight: 600; width: 100%; align-items: center; justify-content: center; gap: 8px; }
+    .loading-more { display: none; text-align: center; padding: 20px 10px; color: var(--text-sub); font-size: 14px; font-weight: 600; width: 100%; align-items: center; justify-content: center; gap: 8px; grid-column: 1 / -1; }
     .loading-more.active { display: flex; }
     .loading-more svg { animation: spin 1s linear infinite; width: 20px; height: 20px; stroke: currentColor; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
-    .sentinel { height: 20px; width: 100%; }
+    .sentinel { height: 20px; width: 100%; grid-column: 1 / -1; }
 
     /* Layer 2: Solo Inventory Product Detail Modal */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1999; }
@@ -233,11 +238,46 @@
 
     <!-- Inventory Feed with Instant Skeletons for Zero Flicker -->
     <div class="inventory-list" id="inventory-list">
-      <div class="inventory-item" style="pointer-events:none;"><div class="skeleton inv-img" style="border:none;"></div><div class="inv-info" style="gap:8px;"><div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>
-      <div class="inventory-item" style="pointer-events:none;"><div class="skeleton inv-img" style="border:none;"></div><div class="inv-info" style="gap:8px;"><div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>
-      <div class="inventory-item" style="pointer-events:none;"><div class="skeleton inv-img" style="border:none;"></div><div class="inv-info" style="gap:8px;"><div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>
-      <div class="inventory-item" style="pointer-events:none;"><div class="skeleton inv-img" style="border:none;"></div><div class="inv-info" style="gap:8px;"><div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>
-      <div class="inventory-item" style="pointer-events:none;"><div class="skeleton inv-img" style="border:none;"></div><div class="inv-info" style="gap:8px;"><div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div><div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div></div></div>
+      <div class="inventory-item" style="pointer-events:none;">
+        <div class="inv-img-wrap">
+          <div class="skeleton inv-img" style="border:none;"></div>
+          <div class="skeleton" style="height:10px; width:80%; border-radius:4px;"></div>
+        </div>
+        <div class="inv-info" style="gap:8px;">
+          <div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:40%; border-radius:4px; margin-top: auto;"></div>
+        </div>
+      </div>
+      <div class="inventory-item" style="pointer-events:none;">
+        <div class="inv-img-wrap">
+          <div class="skeleton inv-img" style="border:none;"></div>
+          <div class="skeleton" style="height:10px; width:80%; border-radius:4px;"></div>
+        </div>
+        <div class="inv-info" style="gap:8px;">
+          <div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:40%; border-radius:4px; margin-top: auto;"></div>
+        </div>
+      </div>
+      <div class="inventory-item" style="pointer-events:none;">
+        <div class="inv-img-wrap">
+          <div class="skeleton inv-img" style="border:none;"></div>
+          <div class="skeleton" style="height:10px; width:80%; border-radius:4px;"></div>
+        </div>
+        <div class="inv-info" style="gap:8px;">
+          <div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:40%; border-radius:4px; margin-top: auto;"></div>
+        </div>
+      </div>
+      <div class="inventory-item" style="pointer-events:none;">
+        <div class="inv-img-wrap">
+          <div class="skeleton inv-img" style="border:none;"></div>
+          <div class="skeleton" style="height:10px; width:80%; border-radius:4px;"></div>
+        </div>
+        <div class="inv-info" style="gap:8px;">
+          <div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:40%; border-radius:4px; margin-top: auto;"></div>
+        </div>
+      </div>
     </div>
     
     <!-- Infinite Scroll Indicator -->
@@ -443,10 +483,13 @@
 
     const generateSkeletons = (count = 5) => Array(count).fill(`
       <div class="inventory-item" style="pointer-events:none;">
-        <div class="skeleton inv-img" style="border:none;"></div>
+        <div class="inv-img-wrap">
+          <div class="skeleton inv-img" style="border:none;"></div>
+          <div class="skeleton" style="height:10px; width:80%; border-radius:4px;"></div>
+        </div>
         <div class="inv-info" style="gap:8px;">
           <div class="skeleton" style="height:18px; width:80%; border-radius:4px;"></div>
-          <div class="skeleton" style="height:14px; width:40%; border-radius:4px;"></div>
+          <div class="skeleton" style="height:14px; width:40%; border-radius:4px; margin-top: auto;"></div>
         </div>
       </div>
     `).join('');
@@ -493,7 +536,7 @@
       
       if (isNew) {
         if (keyword.length > 0 || inventoryList.children.length === 0 || !inventoryList.innerHTML.includes('skeleton')) {
-          inventoryList.innerHTML = generateSkeletons(5);
+          inventoryList.innerHTML = generateSkeletons(6);
         }
         lastInventoryDoc = null;
         hasMoreInventory = true;
@@ -528,7 +571,7 @@
         loadingInventory.classList.remove('active');
 
         if (snap.empty && isNew) {
-          inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub); font-weight:600;">No items found.</div>`;
+          inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub); font-weight:600; grid-column: 1/-1;">No items found.</div>`;
           isFetchingInventory = false;
           return;
         }
@@ -549,23 +592,32 @@
           const stockNum = Number(prod.stock) || 0;
           
           let stockClass = '';
-          let stockDisplay = `Stock: ${stockNum}`;
+          let stockDisplay = `${stockNum}`;
           if (stockNum === 0) {
               stockClass = 'zero';
-              stockDisplay = 'Out of Stock';
+              stockDisplay = '0';
           } else if (stockNum < 5) {
               stockClass = 'low';
           }
           
           const priceDisplay = (Number(prod.price) === 0) ? '₹p' : `₹${(Number(prod.price) || 0).toLocaleString('en-IN')}`;
           
+          // Brand Tag Injection
+          const brandHtml = (prod.brand && prod.brand.trim() !== '') ? `<div class="inv-brand-tag">${prod.brand}</div>` : '';
+          
           row.innerHTML = `
-            <img src="${imgSrc}" class="inv-img" onerror="this.src='${defaultPlaceholderImg}'">
+            <div class="inv-img-wrap">
+              <img src="${imgSrc}" class="inv-img" onerror="this.src='${defaultPlaceholderImg}'">
+              ${brandHtml}
+            </div>
             <div class="inv-info">
               <div class="inv-name">${prod.name || 'Unnamed Product'}</div>
               <div class="inv-meta">
                 <span class="inv-price">${priceDisplay}</span>
-                <span class="inv-stock ${stockClass}">${stockDisplay}</span>
+                <span class="inv-stock ${stockClass}">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                  ${stockDisplay}
+                </span>
               </div>
             </div>
           `;
@@ -582,7 +634,7 @@
         console.error("Inventory fetch error:", err);
         loadingInventory.classList.remove('active');
         if (isNew) {
-           inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--warning); font-weight:600;">Error fetching data.</div>`;
+           inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--warning); font-weight:600; grid-column: 1/-1;">Error fetching data.</div>`;
         }
       }
       isFetchingInventory = false;
