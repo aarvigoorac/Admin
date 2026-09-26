@@ -47,8 +47,12 @@
     /* Sticky Search Header */
     .search-header { position: sticky; top: 0; background: var(--bg-color); z-index: 50; padding: 8px 0; margin-bottom: 8px; }
     .page-title { font-size: 22px; font-weight: 800; margin-bottom: 16px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
-    .badge-read-only { font-size: 12px; background: var(--warning-bg); color: var(--warning); padding: 4px 10px; border-radius: 50px; font-weight: 800; border: 1px solid var(--warning); }
+    .badge-read-only { font-size: 12px; background: var(--success-bg); color: var(--success); padding: 4px 10px; border-radius: 50px; font-weight: 800; border: 1px solid var(--success); }
     
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .btn-create-fab { background: var(--primary); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(40,116,240,0.3); transition: transform 0.15s; }
+    .btn-create-fab:active { transform: scale(0.95); }
+
     .search-wrap { position: relative; width: 100%; display: flex; align-items: center; }
     .search-wrap svg { position: absolute; left: 16px; width: 20px; height: 20px; stroke: var(--text-sub); stroke-width: 2.5; transition: stroke 0.3s ease; }
     .search-input { width: 100%; padding: 14px 16px 14px 48px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface-color); color: var(--text-main); font-size: 15px; outline: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: border-color 0.3s ease, box-shadow 0.3s ease; }
@@ -72,6 +76,7 @@
     .inv-price { color: var(--primary); font-weight: 800; font-size: 16px; }
     .inv-stock { background: var(--success-bg); color: var(--success); padding: 2px 8px; border-radius: 4px; font-size: 12px; border: 1px solid var(--success); }
     .inv-stock.low { background: var(--warning-bg); color: var(--warning); border-color: var(--warning); }
+    .inv-stock.zero { background: var(--skeleton-base); color: var(--text-sub); border-color: var(--border); }
 
     /* Skeletons & Loading Indicators */
     .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important; background-size: 200% 100% !important; animation: shimmer 1.5s infinite !important; border-radius: 6px; }
@@ -83,13 +88,22 @@
     @keyframes spin { 100% { transform: rotate(360deg); } }
     .sentinel { height: 20px; width: 100%; }
 
-    /* Layer 2: Product Detail Modal (Hardware Back Supported) */
+    /* Layer 2: Solo Inventory Product Detail Modal */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1999; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     
-    .bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; height: 92vh; background: var(--bg-color); z-index: 2000; border-radius: 24px 24px 0 0; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); }
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; height: 100vh; background: var(--bg-color); z-index: 2000; border-radius: 0; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); }
     .bottom-sheet.active { transform: translateY(0); }
     
+    @media (min-width: 768px) {
+      .bottom-sheet { width: 700px; height: 90vh; left: 50%; bottom: 5vh; transform: translate(-50%, 150%); border-radius: 24px; }
+      .bottom-sheet.active { transform: translate(-50%, 0); }
+      .erp-data-section { display: grid !important; grid-template-columns: 1fr 1fr; gap: 16px !important; }
+      .erp-field.full-width { grid-column: span 2; }
+      .modal-pull-indicator { display: none; }
+      .modal-header { padding-top: 16px !important; }
+    }
+
     .modal-pull-indicator { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 8px; }
     .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 0 20px 16px; border-bottom: 1px solid var(--border); }
     .modal-title { font-size: 18px; font-weight: 800; color: var(--text-main); }
@@ -99,11 +113,11 @@
     .sheet-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 40px; }
 
     /* Image Upload Section */
-    .image-management { display: flex; flex-direction: column; align-items: center; gap: 16px; background: var(--surface-color); padding: 24px; border-radius: 20px; border: 1px solid var(--border); }
-    .modal-preview-img { width: 160px; height: 160px; object-fit: contain; border-radius: 16px; border: 2px dashed var(--border); padding: 8px; background: var(--bg-color); mix-blend-mode: multiply; }
+    .image-management { display: flex; flex-direction: column; align-items: center; gap: 16px; background: var(--surface-color); padding: 24px; border-radius: 20px; border: 1px solid var(--border); grid-column: span 2; }
+    .modal-preview-img { width: 160px; height: 160px; object-fit: contain; border-radius: 16px; border: 2px dashed var(--border); padding: 8px; background: var(--bg-color); mix-blend-mode: multiply; transition: opacity 0.2s; }
     @media (prefers-color-scheme: dark) { .modal-preview-img { mix-blend-mode: normal; } }
     
-    .btn-upload { width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.15s; background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(40, 116, 240, 0.25); }
+    .btn-upload { width: 100%; max-width: 300px; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.15s; background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(40, 116, 240, 0.25); }
     .btn-upload:active { transform: scale(0.96); }
     .btn-upload.has-image { background: var(--surface-color); color: var(--text-main); border: 1.5px solid var(--border); box-shadow: none; }
     
@@ -114,17 +128,36 @@
     .erp-data-section { display: flex; flex-direction: column; gap: 12px; }
     .erp-field { background: var(--surface-color); border: 1px solid var(--border); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; gap: 4px; }
     .erp-label { font-size: 12px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
-    .erp-value { font-size: 16px; font-weight: 700; color: var(--text-main); line-height: 1.4; word-break: break-word; }
+    
+    /* Original Read-only fields hidden in Solo Inventory mode */
+    .erp-value { display: none; font-size: 16px; font-weight: 700; color: var(--text-main); line-height: 1.4; word-break: break-word; }
     .erp-value.price { color: var(--primary); font-size: 20px; font-weight: 800; }
-    .erp-row { display: flex; gap: 12px; }
+    
+    /* New Editable Inputs for Solo Inventory */
+    .erp-input { width: 100%; padding: 10px 0 2px 0; border: none; background: transparent; color: var(--text-main); font-size: 16px; font-weight: 700; outline: none; border-bottom: 1.5px solid transparent; transition: border-color 0.2s; }
+    .erp-input:focus { border-bottom-color: var(--primary); }
+    .erp-input::placeholder { color: var(--skeleton-base); font-weight: 600; }
+    .erp-input.price-input { color: var(--primary); font-size: 20px; font-weight: 800; }
+
+    .erp-row { display: flex; gap: 12px; grid-column: span 2; }
     .erp-row .erp-field { flex: 1; }
 
     /* Editable Description Textarea */
     .desc-input { width: 100%; min-height: 100px; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg-color); color: var(--text-main); font-size: 14px; font-family: inherit; resize: vertical; margin-top: 8px; outline: none; transition: border-color 0.2s; }
     .desc-input:focus { border-color: var(--primary); }
-    .btn-save-desc { width: 100%; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 800; border: none; cursor: pointer; background: var(--skeleton-base); color: var(--text-main); margin-top: 8px; transition: all 0.2s; }
-    .btn-save-desc:active { transform: scale(0.97); }
-    .btn-save-desc.success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+    
+    /* Action Buttons */
+    .action-controls { display: flex; gap: 12px; margin-top: 16px; grid-column: span 2; }
+    .btn-action { flex: 1; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; transition: transform 0.15s, background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-action:active { transform: scale(0.96); }
+    
+    .btn-save-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(40, 116, 240, 0.25); flex: 2; }
+    .btn-save-primary.success { background: var(--success); box-shadow: 0 4px 12px rgba(19, 115, 51, 0.25); }
+    .btn-copy { background: var(--surface-color); color: var(--text-main); border: 1.5px solid var(--border); }
+    .btn-delete { background: var(--warning-bg); color: var(--warning); border: 1.5px solid var(--warning); }
+    
+    /* Legacy save button hidden */
+    .btn-save-desc { display: none; }
 
     /* Layer 3: Dark Room Crop Editor */
     .fs-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2500; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; }
@@ -161,8 +194,14 @@
     
     <div class="search-header">
       <div class="page-title">
-        Inventory Sync
-        <span class="badge-read-only">ERP READ-ONLY</span>
+        Inventory Hub
+        <div class="header-actions">
+          <span class="badge-read-only">LIVE SYNC</span>
+          <button class="btn-create-fab" id="btn-trigger-create">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Create
+          </button>
+        </div>
       </div>
       <div class="search-wrap">
         <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
@@ -185,7 +224,7 @@
     <!-- Infinite Scroll Indicator -->
     <div class="loading-more" id="loading-inventory">
       <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4"/></svg>
-      Fetching more from ERP...
+      Fetching more...
     </div>
     <div class="sentinel" id="inventory-sentinel"></div>
 
@@ -196,7 +235,7 @@
   <div class="bottom-sheet" id="modal-sheet">
     <div class="modal-pull-indicator"></div>
     <div class="modal-header">
-      <div class="modal-title">Item Details</div>
+      <div class="modal-title" id="m-header-title">Item Details</div>
       <button class="btn-close" id="btn-close-sheet">
         <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
@@ -214,40 +253,64 @@
         </button>
       </div>
 
-      <!-- ERP Data -->
+      <!-- Live Editable Data -->
       <div class="erp-data-section">
-        <div class="erp-field">
+        
+        <div class="erp-field full-width">
           <div class="erp-label">Product Name</div>
           <div class="erp-value" id="m-name">Loading...</div>
+          <input type="text" id="m-name-input" class="erp-input" placeholder="e.g. Premium Silk Saree">
         </div>
         
         <div class="erp-row">
           <div class="erp-field">
-            <div class="erp-label">Selling Price</div>
+            <div class="erp-label">Selling Price (₹)</div>
             <div class="erp-value price" id="m-price">₹0</div>
+            <input type="number" id="m-price-input" class="erp-input price-input" placeholder="0">
           </div>
           <div class="erp-field">
-            <div class="erp-label">ERP Stock</div>
+            <div class="erp-label">Stock Quantity</div>
             <div class="erp-value" id="m-stock">0</div>
+            <input type="number" id="m-stock-input" class="erp-input" placeholder="0">
           </div>
         </div>
 
         <div class="erp-row">
           <div class="erp-field">
-            <div class="erp-label">SKU Code</div>
-            <div class="erp-value" id="m-sku">N/A</div>
+            <div class="erp-label">Brand</div>
+            <input type="text" id="m-brand-input" class="erp-input" placeholder="Brand Name">
           </div>
           <div class="erp-field">
-            <div class="erp-label">Category</div>
-            <div class="erp-value" id="m-category">General</div>
+            <div class="erp-label">SKU Code</div>
+            <div class="erp-value" id="m-sku">N/A</div>
+            <input type="text" id="m-sku-input" class="erp-input" placeholder="Auto or Manual">
           </div>
         </div>
 
-        <div class="erp-field">
-          <div class="erp-label">Description (Editable)</div>
-          <textarea id="m-desc-input" class="desc-input" placeholder="Enter product description..."></textarea>
-          <button id="btn-save-desc" class="btn-save-desc">Save Description</button>
+        <div class="erp-field full-width">
+          <div class="erp-label">Search Keywords (Comma separated)</div>
+          <input type="text" id="m-keywords-input" class="erp-input" placeholder="e.g. traditional, festive, red">
         </div>
+
+        <div class="erp-field full-width">
+          <div class="erp-label">Description</div>
+          <textarea id="m-desc-input" class="desc-input" placeholder="Enter full product description..."></textarea>
+          <button id="btn-save-desc" class="btn-save-desc">Legacy Save</button>
+        </div>
+
+        <!-- Action Transaction Controls -->
+        <div class="action-controls" id="create-controls">
+          <button class="btn-action btn-save-primary" id="btn-create-submit">Create Product</button>
+        </div>
+
+        <div class="action-controls" id="edit-controls" style="display:none;">
+          <button class="btn-action btn-delete" id="btn-delete-submit">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+          </button>
+          <button class="btn-action btn-copy" id="btn-copy-submit">Duplicate</button>
+          <button class="btn-action btn-save-primary" id="btn-edit-submit">Save Content</button>
+        </div>
+
       </div>
       
     </div>
@@ -275,7 +338,7 @@
 
   <script type="module">
     import { auth, db } from '../config.js';
-    import { collection, query, where, orderBy, limit, getDocs, doc, setDoc, startAfter } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, query, where, orderBy, limit, getDocs, doc, setDoc, addDoc, deleteDoc, startAfter } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     // ImgBB API Key
@@ -295,25 +358,37 @@
     const modalSheet = document.getElementById('modal-sheet');
     const overlaySheet = document.getElementById('overlay-sheet');
     const btnCloseSheet = document.getElementById('btn-close-sheet');
+    const mHeaderTitle = document.getElementById('m-header-title');
     
     const mImg = document.getElementById('m-img');
-    const mName = document.getElementById('m-name');
-    const mPrice = document.getElementById('m-price');
-    const mStock = document.getElementById('m-stock');
-    const mSku = document.getElementById('m-sku');
-    const mCategory = document.getElementById('m-category');
-    
+    const mNameInput = document.getElementById('m-name-input');
+    const mPriceInput = document.getElementById('m-price-input');
+    const mStockInput = document.getElementById('m-stock-input');
+    const mSkuInput = document.getElementById('m-sku-input');
+    const mBrandInput = document.getElementById('m-brand-input');
+    const mKeywordsInput = document.getElementById('m-keywords-input');
     const mDescInput = document.getElementById('m-desc-input');
-    const btnSaveDesc = document.getElementById('btn-save-desc');
+
+    const createControls = document.getElementById('create-controls');
+    const editControls = document.getElementById('edit-controls');
 
     const fileInput = document.getElementById('hidden-file-input');
     const btnUpload = document.getElementById('btn-upload-image');
     const btnUploadText = document.getElementById('btn-upload-text');
 
+    // Action Buttons
+    const btnCreateTrigger = document.getElementById('btn-trigger-create');
+    const btnCreateSubmit = document.getElementById('btn-create-submit');
+    const btnEditSubmit = document.getElementById('btn-edit-submit');
+    const btnCopySubmit = document.getElementById('btn-copy-submit');
+    const btnDeleteSubmit = document.getElementById('btn-delete-submit');
+
     // Global State
     let isModalOpen = false;
-    let isCropOpen = false; // Added Crop State
+    let isCropOpen = false; 
+    let currentMode = 'edit'; // 'create' or 'edit'
     let currentSelectedProduct = null;
+    let tempPendingImageUrl = null; // Holds image for uncreated products
     let searchDebounceTimer;
     
     // Pagination State
@@ -340,7 +415,6 @@
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Initial HTML already has skeletons, start fetching silently
         fetchInventory(true, '');
       }
     });
@@ -366,7 +440,7 @@
       searchInput.focus();
     });
 
-    // --- 2. Fetch Inventory Engine (Restored Pagination) ---
+    // --- 2. Fetch Inventory Engine ---
     async function fetchInventory(isNew = false, keyword = '') {
       if (isFetchingInventory || (!hasMoreInventory && !isNew)) return;
       isFetchingInventory = true;
@@ -394,9 +468,9 @@
           }
         } else {
           if (isNew) {
-            q = query(collection(db, "products"), orderBy("name"), limit(10));
+            q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(10));
           } else {
-            q = query(collection(db, "products"), orderBy("name"), startAfter(lastInventoryDoc), limit(10));
+            q = query(collection(db, "products"), orderBy("createdAt", "desc"), startAfter(lastInventoryDoc), limit(10));
           }
         }
 
@@ -408,7 +482,7 @@
         loadingInventory.classList.remove('active');
 
         if (snap.empty && isNew) {
-          inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub); font-weight:600;">No items found in ERP sync.</div>`;
+          inventoryList.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub); font-weight:600;">No items found.</div>`;
           isFetchingInventory = false;
           return;
         }
@@ -427,22 +501,32 @@
           row.className = 'inventory-item';
           const imgSrc = getProductImage(prod);
           const stockNum = Number(prod.stock) || 0;
-          const stockClass = stockNum < 5 ? 'low' : '';
+          
+          let stockClass = '';
+          let stockDisplay = `Stock: ${stockNum}`;
+          if (stockNum === 0) {
+              stockClass = 'zero';
+              stockDisplay = 'Out of Stock';
+          } else if (stockNum < 5) {
+              stockClass = 'low';
+          }
+          
+          const priceDisplay = (Number(prod.price) === 0) ? '₹p' : `₹${(Number(prod.price) || 0).toLocaleString('en-IN')}`;
           
           row.innerHTML = `
             <img src="${imgSrc}" class="inv-img" onerror="this.src='${defaultPlaceholderImg}'">
             <div class="inv-info">
               <div class="inv-name">${prod.name || 'Unnamed Product'}</div>
               <div class="inv-meta">
-                <span class="inv-price">₹${(prod.price || 0).toLocaleString('en-IN')}</span>
-                <span class="inv-stock ${stockClass}">Stock: ${stockNum}</span>
+                <span class="inv-price">${priceDisplay}</span>
+                <span class="inv-stock ${stockClass}">${stockDisplay}</span>
               </div>
             </div>
           `;
 
           row.addEventListener('click', () => {
             if (navigator.vibrate) navigator.vibrate(15);
-            openProductModal(prod);
+            openProductModal(prod, 'edit');
           });
 
           inventoryList.appendChild(row);
@@ -458,7 +542,6 @@
       isFetchingInventory = false;
     }
 
-    // --- 3. Intersection Observer for Infinite Scroll ---
     const infiniteScrollObserver = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && !isFetchingInventory && hasMoreInventory) {
         const val = searchInput.value.trim().toLowerCase().replace(/[\.\#\$\[\]]/g, '');
@@ -470,34 +553,78 @@
        infiniteScrollObserver.observe(sentinelInventory);
     }
 
-    // --- 4. Hardware Back Button Routing System ---
-    function openProductModal(product) {
-      currentSelectedProduct = product;
+    // --- 3. Keyword Prefix Map Generator ---
+    function generateKeywordMap(name, brand, keywords) {
+      const map = {};
+      const combinedString = `${name || ''} ${brand || ''} ${keywords || ''}`.toLowerCase().replace(/[^a-z0-9 ]/g, '');
+      const wordsArray = combinedString.split(' ').filter(w => w.trim().length > 0);
       
-      const imgSrc = getProductImage(product);
-      mImg.src = imgSrc;
-      mImg.onerror = function() { this.src = defaultPlaceholderImg; };
-      
-      mName.innerText = product.name || 'Unnamed Product';
-      mPrice.innerText = `₹${(product.price || 0).toLocaleString('en-IN')}`;
-      mStock.innerText = product.stock !== undefined ? product.stock : '0';
-      mSku.innerText = product.sku || 'N/A';
-      mCategory.innerText = product.category || 'General';
-      mDescInput.value = product.description || '';
+      wordsArray.forEach(word => {
+        let currentPrefix = '';
+        for (let i = 0; i < word.length; i++) {
+          currentPrefix += word[i];
+          map[currentPrefix] = true;
+        }
+      });
+      return map;
+    }
 
-      // Dynamic Button Styling
-      if (imgSrc !== defaultPlaceholderImg) {
-        btnUpload.classList.add('has-image');
-        btnUploadText.innerText = 'Change Image';
-      } else {
+    // --- 4. Hardware Back Button Routing & Modals ---
+    btnCreateTrigger.addEventListener('click', () => {
+       if (navigator.vibrate) navigator.vibrate(15);
+       openProductModal(null, 'create');
+    });
+
+    function openProductModal(product, mode = 'edit') {
+      currentMode = mode;
+      currentSelectedProduct = product;
+      tempPendingImageUrl = null;
+      
+      if (mode === 'create') {
+        mHeaderTitle.innerText = "Create New Product";
+        mImg.src = defaultPlaceholderImg;
+        mNameInput.value = '';
+        mPriceInput.value = '';
+        mStockInput.value = '';
+        mSkuInput.value = '';
+        mBrandInput.value = '';
+        mKeywordsInput.value = '';
+        mDescInput.value = '';
+        
         btnUpload.classList.remove('has-image');
         btnUploadText.innerText = 'Upload Image';
+        
+        createControls.style.display = 'flex';
+        editControls.style.display = 'none';
+      } else {
+        mHeaderTitle.innerText = "Edit Product";
+        const imgSrc = getProductImage(product);
+        mImg.src = imgSrc;
+        mImg.onerror = function() { this.src = defaultPlaceholderImg; };
+        
+        mNameInput.value = product.name || '';
+        mPriceInput.value = product.price || '';
+        mStockInput.value = product.stock !== undefined ? product.stock : '';
+        mSkuInput.value = product.sku || '';
+        mBrandInput.value = product.brand || '';
+        mKeywordsInput.value = product.rawKeywords || '';
+        mDescInput.value = product.description || '';
+
+        if (imgSrc !== defaultPlaceholderImg) {
+          btnUpload.classList.add('has-image');
+          btnUploadText.innerText = 'Change Image';
+        } else {
+          btnUpload.classList.remove('has-image');
+          btnUploadText.innerText = 'Upload Image';
+        }
+        
+        createControls.style.display = 'none';
+        editControls.style.display = 'flex';
       }
 
       overlaySheet.classList.add('active');
       modalSheet.classList.add('active');
       document.body.style.overflowY = 'hidden'; 
-      
       isModalOpen = true;
       history.pushState({ modal: 'inventory_edit' }, '');
     }
@@ -540,41 +667,117 @@
       if (isCropOpen) history.back();
     });
 
-    // --- 5. Description Save Engine ---
-    btnSaveDesc.addEventListener('click', async () => {
-      if (!currentSelectedProduct) return;
+
+    // --- 5. Unified Save Engine (Create, Edit, Morphing) ---
+    async function processTransaction(btnElement, isCopy = false) {
       if (navigator.vibrate) navigator.vibrate(15);
-      
-      const originalText = btnSaveDesc.innerText;
-      btnSaveDesc.innerText = 'Saving...';
-      btnSaveDesc.style.pointerEvents = 'none';
+      const originalText = btnElement.innerText;
+      btnElement.innerText = 'Processing...';
+      btnElement.style.pointerEvents = 'none';
 
       try {
-        const newDesc = mDescInput.value.trim();
-        await setDoc(doc(db, "products", currentSelectedProduct.id), {
-          description: newDesc,
+        const nameVal = mNameInput.value.trim();
+        const priceVal = Number(mPriceInput.value) || 0;
+        const stockVal = Number(mStockInput.value) || 0;
+        const skuVal = mSkuInput.value.trim();
+        const brandVal = mBrandInput.value.trim();
+        const rawKeyVal = mKeywordsInput.value.trim();
+        const descVal = mDescInput.value.trim();
+        
+        const generatedMap = generateKeywordMap(nameVal, brandVal, rawKeyVal);
+        
+        const payload = {
+          name: nameVal,
+          price: priceVal,
+          stock: stockVal,
+          sku: skuVal,
+          brand: brandVal,
+          rawKeywords: rawKeyVal,
+          description: descVal,
+          searchKeywords: generatedMap,
           updatedAt: new Date().toISOString()
-        }, { merge: true });
+        };
 
-        currentSelectedProduct.description = newDesc;
+        if (currentMode === 'create' || isCopy) {
+            payload.createdAt = new Date().toISOString();
+            if (tempPendingImageUrl) {
+                payload.images = { thumbnail: tempPendingImageUrl };
+            } else if (isCopy && currentSelectedProduct && getProductImage(currentSelectedProduct) !== defaultPlaceholderImg) {
+                payload.images = { thumbnail: getProductImage(currentSelectedProduct) };
+            }
+            
+            if(isCopy && payload.name) {
+                payload.name = payload.name + " (Copy)";
+                mNameInput.value = payload.name;
+            }
 
-        btnSaveDesc.innerText = 'Saved!';
-        btnSaveDesc.classList.add('success');
+            const docRef = await addDoc(collection(db, "products"), payload);
+            payload.id = docRef.id;
+            
+            // Morph to Edit Mode seamlessly
+            currentMode = 'edit';
+            currentSelectedProduct = payload;
+            tempPendingImageUrl = null;
+            mHeaderTitle.innerText = "Edit Product";
+            
+            createControls.style.display = 'none';
+            editControls.style.display = 'flex';
+            
+            if (payload.images && payload.images.thumbnail) {
+                btnUpload.classList.add('has-image');
+                btnUploadText.innerText = 'Change Image';
+            }
+
+        } else {
+            if (tempPendingImageUrl) {
+                payload.images = { thumbnail: tempPendingImageUrl };
+            }
+            await setDoc(doc(db, "products", currentSelectedProduct.id), payload, { merge: true });
+            currentSelectedProduct = { ...currentSelectedProduct, ...payload };
+            tempPendingImageUrl = null;
+        }
+
+        btnElement.innerText = 'Success!';
+        btnElement.classList.add('success');
+
+        // Refresh feed seamlessly in background
+        const currentSearch = searchInput.value.trim().toLowerCase().replace(/[\.\#\$\[\]]/g, '');
+        fetchInventory(true, currentSearch);
 
         setTimeout(() => {
-          btnSaveDesc.innerText = 'Save Description';
-          btnSaveDesc.classList.remove('success');
-          btnSaveDesc.style.pointerEvents = 'auto';
-        }, 2000);
+          btnElement.innerText = originalText;
+          btnElement.classList.remove('success');
+          btnElement.style.pointerEvents = 'auto';
+        }, 1500);
 
       } catch (error) {
-        console.error("Save Description Error:", error);
-        btnSaveDesc.innerText = 'Error Saving';
-        btnSaveDesc.style.pointerEvents = 'auto';
+        console.error("Transaction Error:", error);
+        btnElement.innerText = 'Error';
+        btnElement.style.pointerEvents = 'auto';
       }
+    }
+
+    btnCreateSubmit.addEventListener('click', (e) => processTransaction(e.target));
+    btnEditSubmit.addEventListener('click', (e) => processTransaction(e.target));
+    btnCopySubmit.addEventListener('click', (e) => processTransaction(e.target, true));
+
+    btnDeleteSubmit.addEventListener('click', async () => {
+        if (!currentSelectedProduct) return;
+        if(confirm("Are you sure you want to delete this product?")) {
+            if (navigator.vibrate) navigator.vibrate(20);
+            try {
+                await deleteDoc(doc(db, "products", currentSelectedProduct.id));
+                const currentSearch = searchInput.value.trim().toLowerCase().replace(/[\.\#\$\[\]]/g, '');
+                fetchInventory(true, currentSearch);
+                history.back(); // Close modal safely
+            } catch(e) {
+                console.error("Delete Error", e);
+                alert("Failed to delete.");
+            }
+        }
     });
 
-    // --- 6. The Canvas Cropper & KB Compression Engine (Pan & Scan) ---
+    // --- 6. The Canvas Cropper & KB Compression Engine ---
     const cropImgTarget = document.getElementById('crop-target-img');
     const cropArea = document.getElementById('crop-area');
     const cropSquare = document.getElementById('crop-square');
@@ -603,17 +806,14 @@
       const tempImg = new Image();
       
       tempImg.onload = () => {
-        // 1. Prepare image silently
         cropImgTarget.style.opacity = '0';
         cropImgTarget.style.transition = 'opacity 0.3s ease';
         cropImgTarget.src = objectUrl;
 
-        // 2. Push state and show dark room
         history.pushState({ modal: 'crop' }, '');
         isCropOpen = true;
         document.getElementById('modal-crop').classList.add('active');
 
-        // 3. Wait for animation to lock to get accurate DOM measurements
         setTimeout(() => {
           imgOrigW = tempImg.width;
           imgOrigH = tempImg.height;
@@ -631,8 +831,6 @@
           cropY = (areaRect.height - displayH) / 2;
           
           updateCropTransform();
-
-          // 4. Fade in
           cropImgTarget.style.opacity = '1';
         }, 420);
       };
@@ -657,7 +855,6 @@
       cropImgTarget.style.transform = `translate(${cropX}px, ${cropY}px) scale(${cropScale})`;
     }
 
-    // Drag Interactivity
     const onStart = (e) => {
       isDragging = true;
       cropImgTarget.style.transition = 'none'; 
@@ -684,7 +881,6 @@
     window.addEventListener('mouseup', onEnd);
     window.addEventListener('touchend', onEnd);
 
-    // Final Confirm logic
     document.getElementById('btn-crop-confirm').addEventListener('click', async () => {
       if (navigator.vibrate) navigator.vibrate(15);
       const btnConfirm = document.getElementById('btn-crop-confirm');
@@ -720,34 +916,36 @@
         });
         
         const imgbbData = await imgbbRes.json();
-        
         if (!imgbbData.success) throw new Error("ImgBB Upload Failed");
         const finalImageUrl = imgbbData.data.url;
 
-        btnConfirm.innerText = 'Saving...';
-
-        await setDoc(doc(db, "products", currentSelectedProduct.id), {
-          images: { thumbnail: finalImageUrl },
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-
-        // Update UI
+        // UI Feedback 
         mImg.src = finalImageUrl;
+        mImg.style.opacity = '1';
         btnUploadText.innerText = 'Change Image';
         btnUpload.classList.add('has-image');
-        
-        // Refresh feed silently
-        const currentKeyword = searchInput.value.trim().toLowerCase().replace(/[\.\#\$\[\]]/g, '');
-        fetchInventory(true, currentKeyword);
-        
+
+        if (currentMode === 'edit') {
+            btnConfirm.innerText = 'Saving...';
+            await setDoc(doc(db, "products", currentSelectedProduct.id), {
+                images: { thumbnail: finalImageUrl },
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+            
+            // Refresh feed silently
+            const currentSearch = searchInput.value.trim().toLowerCase().replace(/[\.\#\$\[\]]/g, '');
+            fetchInventory(true, currentSearch);
+        } else {
+            // Keep pending image for create transaction
+            tempPendingImageUrl = finalImageUrl;
+        }
+
         if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
-        
-        // Trigger back to close crop modal safely
-        history.back();
+        history.back(); // close crop modal
 
       } catch (error) {
         console.error("Upload Error:", error);
-        alert("Failed to upload image. Please try again.");
+        alert("Failed to upload image.");
       }
       
       btnConfirm.innerText = 'Confirm Crop';
